@@ -24,7 +24,7 @@ import {
     Undo
 } from 'lucide-react';
 import React, { useCallback, useRef, useState } from 'react';
-// import { useDropzone } from 'react-dropzone';
+import { useDropzone } from 'react-dropzone';
 
 // ==========================================
 // 1. TYPES & CONSTANTS

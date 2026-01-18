@@ -1,41 +1,36 @@
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
+import { toPng } from "html-to-image";
 import {
-    AnimatePresence,
-    motion,
-    useDragControls
-} from 'framer-motion';
-import { toPng } from 'html-to-image';
-import {
-    ChevronDown,
-    Copy,
-    Download,
-    Grid,
-    Image as ImageIcon,
-    LayoutTemplate,
-    Minus,
-    Move,
-    Palette,
-    Plus,
-    QrCode,
-    Settings,
-    Smartphone,
-    Trash2,
-    Type,
-    Undo
-} from 'lucide-react';
-import React, { useCallback, useRef, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+  Briefcase,
+  ChevronDown,
+  Copy,
+  Download,
+  Grid,
+  Image as ImageIcon,
+  Layout,
+  LayoutTemplate,
+  Minus,
+  Move,
+  Palette,
+  Plus,
+  QrCode,
+  Settings,
+  Smartphone,
+  Trash2,
+  Type,
+  Undo,
+} from "lucide-react";
+import React, { useCallback, useRef, useState } from "react";
+import { useDropzone } from "react-dropzone";
 
 // ==========================================
 // 1. TYPES & CONSTANTS
 // ==========================================
 
-type ElementType = 'text' | 'image' | 'qr';
-
-interface Position {
-  x: number;
-  y: number;
-}
+type ElementType = "text" | "image" | "qr";
+type BackgroundType = "solid" | "gradient" | "mesh";
+type GradientDirection = "br" | "r" | "b" | "tr" | "tl";
 
 interface CardElement {
   id: string;
@@ -57,11 +52,11 @@ interface CardElement {
 }
 
 interface BackgroundSettings {
-  type: 'solid' | 'gradient' | 'mesh';
+  type: BackgroundType;
   color1: string;
   color2: string;
   color3: string;
-  direction: string;
+  direction: GradientDirection;
   noise: number; // 0-1
   blur: number; // 0-100
 }
@@ -74,96 +69,323 @@ interface CardState {
   height: number;
   scale: number;
   showGrid: boolean;
-  history: CardState[]; // For Undo
+  history: Omit<CardState, "history" | "historyIndex">[];
   historyIndex: number;
 }
 
+interface Template {
+  id: string;
+  name: string;
+  thumbnail: string; // CSS color string for preview
+  state: Partial<CardState>; // Partial state to merge
+}
+
 const FONTS = [
-  { name: 'Inter', value: 'Inter, sans-serif' },
-  { name: 'Playfair', value: '"Playfair Display", serif' },
-  { name: 'Roboto Mono', value: '"Roboto Mono", monospace' },
-  { name: 'Oswald', value: '"Oswald", sans-serif' },
+  { name: "Inter", value: "Inter, sans-serif" },
+  { name: "Playfair", value: '"Playfair Display", serif' },
+  { name: "Roboto Mono", value: '"Roboto Mono", monospace' },
+  { name: "Oswald", value: '"Oswald", sans-serif' },
 ];
 
-const INITIAL_ELEMENTS: CardElement[] = [
+const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
+
+// --- TEMPLATES CONFIGURATION ---
+
+const TEMPLATES: Template[] = [
   {
-    id: 'el-1',
-    type: 'text',
-    content: 'Dikie Dev',
-    x: 40,
-    y: 40,
-    fontSize: 32,
-    fontWeight: 800,
-    color: '#ffffff',
-    fontFamily: 'Inter, sans-serif',
-    opacity: 1,
-    letterSpacing: -1,
-    rotation: 0,
-    zIndex: 10
+    id: "modern-dark",
+    name: "Dev Dark",
+    thumbnail: "linear-gradient(to bottom right, #0f172a, #334155)",
+    state: {
+      background: {
+        type: "gradient",
+        color1: "#0f172a",
+        color2: "#334155",
+        color3: "#1e293b",
+        direction: "br",
+        noise: 0.05,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "t1-1",
+          type: "text",
+          content: "DIKIE DEV",
+          x: 40,
+          y: 40,
+          fontSize: 32,
+          fontWeight: 800,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t1-2",
+          type: "text",
+          content: "Full Stack Engineer",
+          x: 40,
+          y: 85,
+          fontSize: 16,
+          fontWeight: 500,
+          color: "#94a3b8",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t1-3",
+          type: "text",
+          content: "dikie@example.com",
+          x: 40,
+          y: 240,
+          fontSize: 14,
+          fontWeight: 400,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 0.8,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t1-4",
+          type: "qr",
+          content: "https://dikie.dev",
+          x: 450,
+          y: 40,
+          width: 100,
+          height: 100,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
   },
   {
-    id: 'el-2',
-    type: 'text',
-    content: 'Full Stack Engineer',
-    x: 40,
-    y: 85,
-    fontSize: 16,
-    fontWeight: 500,
-    color: '#a1a1aa',
-    fontFamily: 'Inter, sans-serif',
-    opacity: 1,
-    letterSpacing: 1,
-    rotation: 0,
-    zIndex: 10
+    id: "minimal-light",
+    name: "Studio Clean",
+    thumbnail: "#f8fafc",
+    state: {
+      background: {
+        type: "solid",
+        color1: "#f8fafc",
+        color2: "#ffffff",
+        color3: "",
+        direction: "br",
+        noise: 0,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "t2-1",
+          type: "text",
+          content: "Alex Morgan",
+          x: 300,
+          y: 140,
+          fontSize: 42,
+          fontWeight: 900,
+          color: "#0f172a",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: -2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t2-2",
+          type: "text",
+          content: "ART DIRECTOR",
+          x: 300,
+          y: 190,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#64748b",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 4,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t2-3",
+          type: "qr",
+          content: "portfolio",
+          x: 250,
+          y: 20,
+          width: 80,
+          height: 80,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 5,
+        },
+      ],
+    },
   },
   {
-    id: 'el-3',
-    type: 'text',
-    content: 'dikie@example.com',
-    x: 40,
-    y: 240,
-    fontSize: 14,
-    fontWeight: 400,
-    color: '#ffffff',
-    fontFamily: 'Inter, sans-serif',
-    opacity: 0.8,
-    letterSpacing: 0,
-    rotation: 0,
-    zIndex: 10
-  }
+    id: "cyber-punk",
+    name: "Cyber Neon",
+    thumbnail: "linear-gradient(to right, #2e0228, #180326)",
+    state: {
+      background: {
+        type: "gradient",
+        color1: "#2e0228",
+        color2: "#180326",
+        color3: "",
+        direction: "br",
+        noise: 0.3,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "t3-1",
+          type: "text",
+          content: "CYBER_SYSTEMS",
+          x: 30,
+          y: 120,
+          fontSize: 38,
+          fontWeight: 700,
+          color: "#d946ef",
+          fontFamily: '"Oswald", sans-serif',
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t3-2",
+          type: "text",
+          content: "SYSTEM_ADMIN // ROOT",
+          x: 30,
+          y: 170,
+          fontSize: 14,
+          fontWeight: 400,
+          color: "#22d3ee",
+          fontFamily: '"Roboto Mono", monospace',
+          opacity: 1,
+          letterSpacing: 1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t3-3",
+          type: "text",
+          content: "ID: 994-22-X",
+          x: 450,
+          y: 280,
+          fontSize: 12,
+          fontWeight: 400,
+          color: "#e879f9",
+          fontFamily: '"Roboto Mono", monospace',
+          opacity: 0.6,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
+  {
+    id: "mesh-gradient",
+    name: "Aura Mesh",
+    thumbnail:
+      "radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%)",
+    state: {
+      background: {
+        type: "mesh",
+        color1: "#000000",
+        color2: "#000000",
+        color3: "",
+        direction: "br",
+        noise: 0.1,
+        blur: 40,
+      },
+      elements: [
+        {
+          id: "t4-1",
+          type: "text",
+          content: "creative",
+          x: 40,
+          y: 40,
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 0.5,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t4-2",
+          type: "text",
+          content: "Studio",
+          x: 40,
+          y: 200,
+          fontSize: 64,
+          fontWeight: 300,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -3,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "t4-3",
+          type: "text",
+          content: "Design",
+          x: 40,
+          y: 260,
+          fontSize: 64,
+          fontWeight: 300,
+          color: "#ffffff",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: -3,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
 ];
 
 const INITIAL_STATE: CardState = {
-  elements: INITIAL_ELEMENTS,
-  selectedId: 'el-1',
-  background: {
-    type: 'gradient',
-    color1: '#0f172a',
-    color2: '#334155',
-    color3: '#1e293b',
-    direction: 'br',
-    noise: 0.05,
-    blur: 0,
-  },
+  ...(TEMPLATES[0].state as any),
   width: 600,
   height: 350,
   scale: 1,
   showGrid: true,
   history: [],
-  historyIndex: -1
+  historyIndex: -1,
+  selectedId: "t1-1",
 };
 
 // ==========================================
 // 2. UTILS & HELPERS
 // ==========================================
 
-const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
-
-// Simple custom QR Code SVG path generator (Mock for "no external heavy lib")
-const getQRCodePath = () => "M4 4h6v6H4V4zm2 2v2h2V6H6zm-2 8h6v6H4v-6zm2 2v2h2v-2H6zm8-10h6v6h-6V4zm2 2v2h2V6h-2zM4 20h2v-2H4v2zm2-2h2v-2H6v2zm4 2h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm2-2h2v-2h-2v2zm-2 2h2v-2h-2v2zm10 8h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm-4 6h2v-2h-2v2zm2 2h2v-2h-2v2z";
+const getQRCodePath = () =>
+  "M4 4h6v6H4V4zm2 2v2h2V6H6zm-2 8h6v6H4v-6zm2 2v2h2v-2H6zm8-10h6v6h-6V4zm2 2v2h2V6h-2zM4 20h2v-2H4v2zm2-2h2v-2H6v2zm4 2h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm2-2h2v-2h-2v2zm-2 2h2v-2h-2v2zm10 8h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm-4 6h2v-2h-2v2zm2 2h2v-2h-2v2z";
 
 // ==========================================
-// 3. UI LIBRARY (Custom, No Shadcn)
+// 3. UI LIBRARY (Custom, Type Safe)
 // ==========================================
 
 const Label = ({ children }: { children: React.ReactNode }) => (
@@ -172,7 +394,15 @@ const Label = ({ children }: { children: React.ReactNode }) => (
   </label>
 );
 
-const Slider = ({ value, min, max, onChange, label }: any) => (
+interface SliderProps {
+  value: number;
+  min: number;
+  max: number;
+  onChange: (val: number) => void;
+  label?: string;
+}
+
+const Slider = ({ value, min, max, onChange, label }: SliderProps) => (
   <div className="mb-4">
     <div className="flex justify-between items-center mb-1">
       {label && <Label>{label}</Label>}
@@ -189,11 +419,17 @@ const Slider = ({ value, min, max, onChange, label }: any) => (
   </div>
 );
 
-const ColorInput = ({ value, onChange, label }: any) => (
+interface ColorInputProps {
+  value: string;
+  onChange: (val: string) => void;
+  label?: string;
+}
+
+const ColorInput = ({ value, onChange, label }: ColorInputProps) => (
   <div className="mb-4">
     {label && <Label>{label}</Label>}
     <div className="flex items-center gap-2">
-      <div 
+      <div
         className="w-8 h-8 rounded-full border border-slate-600 shadow-sm"
         style={{ backgroundColor: value }}
       />
@@ -203,17 +439,24 @@ const ColorInput = ({ value, onChange, label }: any) => (
         onChange={(e) => onChange(e.target.value)}
         className="flex-1 bg-slate-800 border border-slate-700 rounded px-3 py-1.5 text-xs text-white font-mono focus:border-indigo-500 outline-none"
       />
-      <input 
-        type="color" 
+      <input
+        type="color"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-8 h-8 opacity-0 absolute cursor-pointer" 
+        className="w-8 h-8 opacity-0 absolute cursor-pointer"
       />
     </div>
   </div>
 );
 
-const Select = ({ value, onChange, options, label }: any) => (
+interface SelectProps {
+  value: string;
+  onChange: (val: string) => void;
+  options: { name: string; value: string }[];
+  label?: string;
+}
+
+const Select = ({ value, onChange, options, label }: SelectProps) => (
   <div className="mb-4">
     {label && <Label>{label}</Label>}
     <div className="relative">
@@ -222,28 +465,57 @@ const Select = ({ value, onChange, options, label }: any) => (
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-white appearance-none focus:border-indigo-500 outline-none"
       >
-        {options.map((opt: any) => (
-          <option key={opt.value} value={opt.value}>{opt.name}</option>
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.name}
+          </option>
         ))}
       </select>
-      <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+      <ChevronDown
+        size={14}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"
+      />
     </div>
   </div>
 );
 
-const Button = ({ onClick, children, active, variant = 'secondary', icon: Icon, className }: any) => {
-  const baseStyle = "flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95";
+interface ButtonProps {
+  onClick: () => void;
+  children: React.ReactNode;
+  active?: boolean;
+  variant?: "primary" | "secondary" | "danger" | "ghost";
+  icon?: React.ElementType;
+  className?: string;
+  disabled?: boolean;
+}
+
+const Button = ({
+  onClick,
+  children,
+  active,
+  variant = "secondary",
+  icon: Icon,
+  className,
+  disabled,
+}: ButtonProps) => {
+  const baseStyle =
+    "flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
   const variants = {
-    primary: "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20",
-    secondary: active 
-      ? "bg-slate-700 text-white ring-1 ring-indigo-500" 
+    primary:
+      "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20",
+    secondary: active
+      ? "bg-slate-700 text-white ring-1 ring-indigo-500"
       : "bg-slate-800 hover:bg-slate-700 text-slate-300",
     danger: "bg-red-500/10 hover:bg-red-500/20 text-red-400",
-    ghost: "bg-transparent hover:bg-white/5 text-slate-400 hover:text-white"
+    ghost: "bg-transparent hover:bg-white/5 text-slate-400 hover:text-white",
   };
-  
+
   return (
-    <button onClick={onClick} className={`${baseStyle} ${variants[variant as keyof typeof variants]} ${className}`}>
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyle} ${variants[variant]} ${className || ""}`}
+    >
       {Icon && <Icon size={14} />}
       {children}
     </button>
@@ -257,31 +529,59 @@ const Button = ({ onClick, children, active, variant = 'secondary', icon: Icon, 
 export default function CardArchitectPro() {
   // --- State ---
   const [state, setState] = useState<CardState>(INITIAL_STATE);
+  const [activeTab, setActiveTab] = useState<"tools" | "templates">("tools");
   const cardRef = useRef<HTMLDivElement>(null);
-  
+
   // --- History Management ---
-  const pushHistory = (newState: CardState) => {
-    const prevHistory = state.history.slice(0, state.historyIndex + 1);
-    // Don't save history too aggressively, simplistic check
-    setState({
-      ...newState,
-      history: [...prevHistory, newState],
-      historyIndex: prevHistory.length
-    });
-  };
+  const pushHistory = useCallback(
+    (newState: CardState) => {
+      // We only save specific parts of state to history to save memory
+      const { elements, background, width, height } = newState;
+      const historyEntry = {
+        elements,
+        background,
+        width,
+        height,
+        scale: newState.scale,
+        showGrid: newState.showGrid,
+        selectedId: newState.selectedId,
+      };
+
+      const prevHistory = state.history.slice(0, state.historyIndex + 1);
+
+      setState((prev) => ({
+        ...prev,
+        elements: newState.elements,
+        background: newState.background,
+        width: newState.width,
+        height: newState.height,
+        history: [...prevHistory, historyEntry],
+        historyIndex: prevHistory.length,
+      }));
+    },
+    [state.history, state.historyIndex]
+  );
 
   const undo = () => {
     if (state.historyIndex > 0) {
       const prev = state.history[state.historyIndex - 1];
-      setState({ ...prev, history: state.history, historyIndex: state.historyIndex - 1 });
+      setState((current) => ({
+        ...current,
+        ...prev,
+        historyIndex: current.historyIndex - 1,
+      }));
     }
   };
 
-  const redo = () => {
-    if (state.historyIndex < state.history.length - 1) {
-      const next = state.history[state.historyIndex + 1];
-      setState({ ...next, history: state.history, historyIndex: state.historyIndex + 1 });
-    }
+  const applyTemplate = (template: Template) => {
+    // When applying a template, we reset history to avoid weird undo states between completely different designs
+    setState({
+      ...state,
+      ...template.state,
+      selectedId: null,
+      history: [],
+      historyIndex: -1,
+    });
   };
 
   // --- Actions ---
@@ -290,35 +590,45 @@ export default function CardArchitectPro() {
     const newEl: CardElement = {
       id: generateId(),
       type,
-      content: type === 'text' ? 'New Text' : type === 'qr' ? 'https://website.com' : 'https://via.placeholder.com/100',
+      content:
+        type === "text"
+          ? "New Text"
+          : type === "qr"
+          ? "https://website.com"
+          : "https://via.placeholder.com/100",
       x: state.width / 2 - 50,
       y: state.height / 2 - 20,
       fontSize: 18,
       fontWeight: 500,
-      color: '#ffffff',
-      fontFamily: 'Inter, sans-serif',
+      color: "#ffffff",
+      fontFamily: "Inter, sans-serif",
       opacity: 1,
       letterSpacing: 0,
       rotation: 0,
       zIndex: state.elements.length + 1,
-      width: type !== 'text' ? 80 : undefined,
-      height: type !== 'text' ? 80 : undefined
+      width: type !== "text" ? 80 : undefined,
+      height: type !== "text" ? 80 : undefined,
     };
 
-    const newState = { ...state, elements: [...state.elements, newEl], selectedId: newEl.id };
-    setState(newState); // Skip history for simple add to save memory
+    setState((prev) => ({
+      ...prev,
+      elements: [...prev.elements, newEl],
+      selectedId: newEl.id,
+    }));
   };
 
   const updateElement = (id: string, updates: Partial<CardElement>) => {
-    const updatedElements = state.elements.map(el => el.id === id ? { ...el, ...updates } : el);
+    const updatedElements = state.elements.map((el) =>
+      el.id === id ? { ...el, ...updates } : el
+    );
     setState({ ...state, elements: updatedElements });
   };
 
   const deleteElement = (id: string) => {
     setState({
       ...state,
-      elements: state.elements.filter(el => el.id !== id),
-      selectedId: null
+      elements: state.elements.filter((el) => el.id !== id),
+      selectedId: null,
     });
   };
 
@@ -328,48 +638,72 @@ export default function CardArchitectPro() {
 
   const handleDownload = useCallback(async () => {
     if (cardRef.current === null) return;
-    
-    // Temporarily hide grid/selection handles
-    const tempState = { ...state, showGrid: false, selectedId: null };
-    // We would technically set this state, render, capture, then restore.
-    // For this demo, we'll just capture as is but filter grid in CSS class
-    
-    const dataUrl = await toPng(cardRef.current, { pixelRatio: 3 });
-    saveAs(dataUrl, 'card-architect-pro.png');
-  }, [cardRef]);
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const newEl: CardElement = {
-          id: generateId(),
-          type: 'image',
-          content: reader.result as string,
-          x: state.width / 2 - 50,
-          y: state.height / 2 - 50,
-          fontSize: 0,
-          fontWeight: 0,
-          color: '',
-          fontFamily: '',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: state.elements.length + 1,
-          width: 100,
-          height: 100
+    // Temporarily hide grid/selection handles via CSS class or logic if needed
+    // The grid is handled by conditional rendering, so we just toggle state quickly?
+    // Actually, toPng captures what is visible. We can rely on the user turning off grid or force it.
+    const prevGrid = state.showGrid;
+    const prevSelected = state.selectedId;
+
+    setState((prev) => ({ ...prev, showGrid: false, selectedId: null }));
+
+    // Allow React render cycle to flush
+    setTimeout(async () => {
+      if (cardRef.current) {
+        const dataUrl = await toPng(cardRef.current, { pixelRatio: 3 });
+        saveAs(dataUrl, "card-architect-pro.png");
+        // Restore
+        setState((prev) => ({
+          ...prev,
+          showGrid: prevGrid,
+          selectedId: prevSelected,
+        }));
+      }
+    }, 100);
+  }, [state.showGrid, state.selectedId]);
+
+  const onDrop = useCallback(
+    (acceptedFiles: File[]) => {
+      const file = acceptedFiles[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const newEl: CardElement = {
+            id: generateId(),
+            type: "image",
+            content: reader.result as string,
+            x: state.width / 2 - 50,
+            y: state.height / 2 - 50,
+            fontSize: 0,
+            fontWeight: 0,
+            color: "",
+            fontFamily: "",
+            opacity: 1,
+            letterSpacing: 0,
+            rotation: 0,
+            zIndex: state.elements.length + 1,
+            width: 100,
+            height: 100,
+          };
+          setState((prev) => ({
+            ...prev,
+            elements: [...prev.elements, newEl],
+            selectedId: newEl.id,
+          }));
         };
-        setState(prev => ({ ...prev, elements: [...prev.elements, newEl], selectedId: newEl.id }));
-      };
-      reader.readAsDataURL(file);
-    }
-  }, [state.width, state.height]);
+        reader.readAsDataURL(file);
+      }
+    },
+    [state.width, state.height, state.elements.length]
+  );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: {'image/*': []}, noClick: true });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    noClick: true,
+  });
 
-  // Get currently selected element
-  const selectedEl = state.elements.find(el => el.id === state.selectedId);
+  const selectedEl = state.elements.find((el) => el.id === state.selectedId);
 
   // ==========================================
   // 5. RENDER
@@ -377,60 +711,152 @@ export default function CardArchitectPro() {
 
   return (
     <div className="flex h-screen w-screen bg-[#09090b] text-slate-300 font-sans overflow-hidden">
-      
-      {/* --- LEFT SIDEBAR: TOOLS --- */}
-      <div className="w-16 border-r border-white/10 flex flex-col items-center py-6 gap-6 bg-[#0c0c0e] z-20">
-        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-4">
+      {/* --- LEFT SIDEBAR: NAVIGATION & TOOLS --- */}
+      <div className="w-16 border-r border-white/10 flex flex-col items-center py-6 gap-4 bg-[#0c0c0e] z-20">
+        <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-2">
           <LayoutTemplate className="text-white" size={20} />
         </div>
-        
-        <div className="flex flex-col gap-4 w-full px-2">
-           <Tooltip text="Add Text">
-             <ToolBtn icon={Type} onClick={() => addElement('text')} />
-           </Tooltip>
-           <Tooltip text="Upload Image">
-             <ToolBtn icon={ImageIcon} onClick={() => document.getElementById('img-upload')?.click()} />
-             <input type="file" id="img-upload" className="hidden" onChange={(e) => {
-                 if(e.target.files?.[0]) {
-                     const reader = new FileReader();
-                     reader.onload = () => {
-                        const newEl: CardElement = {
-                          id: generateId(),
-                          type: 'image',
-                          content: reader.result as string,
-                          x: 100, y: 100, fontSize: 0, fontWeight: 0, color: '', fontFamily: '',
-                          opacity: 1, letterSpacing: 0, rotation: 0, zIndex: 10, width: 100, height: 100
-                        };
-                        setState(prev => ({ ...prev, elements: [...prev.elements, newEl], selectedId: newEl.id }));
-                     };
-                     reader.readAsDataURL(e.target.files[0]);
-                 }
-             }} />
-           </Tooltip>
-           <Tooltip text="Add QR Code">
-             <ToolBtn icon={QrCode} onClick={() => addElement('qr')} />
-           </Tooltip>
-           <div className="h-px w-full bg-white/10 my-2" />
-           <Tooltip text="Show Grid">
-             <ToolBtn icon={Grid} active={state.showGrid} onClick={() => setState({...state, showGrid: !state.showGrid})} />
-           </Tooltip>
-           <Tooltip text="Undo">
-             <ToolBtn icon={Undo} onClick={undo} disabled={state.historyIndex <= 0} />
-           </Tooltip>
+
+        {/* Navigation Tabs */}
+        <div className="flex flex-col gap-2 w-full px-2">
+          <Tooltip text="Editor Tools">
+            <ToolBtn
+              icon={Grid}
+              active={activeTab === "tools"}
+              onClick={() => setActiveTab("tools")}
+            />
+          </Tooltip>
+          <Tooltip text="Templates">
+            <ToolBtn
+              icon={Layout}
+              active={activeTab === "templates"}
+              onClick={() => setActiveTab("templates")}
+            />
+          </Tooltip>
         </div>
+
+        <div className="h-px w-8 bg-white/10 my-2" />
+
+        {/* Context Tools (Only show when Editor is active) */}
+        {activeTab === "tools" && (
+          <div className="flex flex-col gap-4 w-full px-2 animate-in fade-in duration-300">
+            <Tooltip text="Add Text">
+              <ToolBtn icon={Type} onClick={() => addElement("text")} />
+            </Tooltip>
+            <Tooltip text="Upload Image">
+              <ToolBtn
+                icon={ImageIcon}
+                onClick={() => document.getElementById("img-upload")?.click()}
+              />
+              <input
+                type="file"
+                id="img-upload"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      const newEl: CardElement = {
+                        id: generateId(),
+                        type: "image",
+                        content: reader.result as string,
+                        x: 100,
+                        y: 100,
+                        fontSize: 0,
+                        fontWeight: 0,
+                        color: "",
+                        fontFamily: "",
+                        opacity: 1,
+                        letterSpacing: 0,
+                        rotation: 0,
+                        zIndex: 10,
+                        width: 100,
+                        height: 100,
+                      };
+                      setState((prev) => ({
+                        ...prev,
+                        elements: [...prev.elements, newEl],
+                        selectedId: newEl.id,
+                      }));
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                  }
+                }}
+              />
+            </Tooltip>
+            <Tooltip text="Add QR Code">
+              <ToolBtn icon={QrCode} onClick={() => addElement("qr")} />
+            </Tooltip>
+            <div className="h-px w-full bg-white/10 my-2" />
+            <Tooltip text="Undo">
+              <ToolBtn
+                icon={Undo}
+                onClick={undo}
+                disabled={state.historyIndex <= 0}
+              />
+            </Tooltip>
+          </div>
+        )}
       </div>
 
+      {/* --- SECONDARY SIDEBAR (TEMPLATES) --- */}
+      {activeTab === "templates" && (
+        <div className="w-64 border-r border-white/10 bg-[#0c0c0e] flex flex-col z-10 animate-in slide-in-from-left-4 duration-200">
+          <div className="p-4 border-b border-white/10">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Templates
+            </h2>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+            {TEMPLATES.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => applyTemplate(t)}
+                className="group w-full text-left"
+              >
+                <div
+                  className="w-full aspect-video rounded-lg border border-white/10 mb-2 overflow-hidden relative shadow-sm transition-all group-hover:border-indigo-500 group-hover:shadow-indigo-500/20"
+                  style={{ background: t.thumbnail }}
+                >
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                </div>
+                <div className="text-xs font-medium text-slate-300 group-hover:text-white">
+                  {t.name}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* --- CENTER: CANVAS --- */}
-      <div className="flex-1 flex flex-col relative bg-[#18181b]" {...getRootProps()}>
+      <div
+        className="flex-1 flex flex-col relative bg-[#18181b]"
+        {...getRootProps()}
+      >
         {/* Top Bar */}
         <div className="h-16 border-b border-white/10 bg-[#0c0c0e] flex items-center justify-between px-6 z-10">
           <div>
-            <h1 className="text-white font-bold text-sm tracking-wide">Untitled Card</h1>
+            <h1 className="text-white font-bold text-sm tracking-wide">
+              Untitled Card
+            </h1>
             <p className="text-[10px] text-slate-500">Auto-saving enabled</p>
           </div>
           <div className="flex items-center gap-3">
-             <Button variant="ghost" icon={Smartphone}>Preview</Button>
-             <Button variant="primary" icon={Download} onClick={handleDownload}>Export PNG</Button>
+            <Button
+              variant="ghost"
+              icon={Grid}
+              active={state.showGrid}
+              onClick={() => setState({ ...state, showGrid: !state.showGrid })}
+            >
+              Grid
+            </Button>
+            <Button variant="ghost" icon={Smartphone} onClick={() => {}}>
+              Preview
+            </Button>
+            <Button variant="primary" icon={Download} onClick={handleDownload}>
+              Export PNG
+            </Button>
           </div>
         </div>
 
@@ -439,41 +865,53 @@ export default function CardArchitectPro() {
           <input {...getInputProps()} />
           {isDragActive && (
             <div className="absolute inset-0 z-50 bg-indigo-500/20 backdrop-blur-sm flex items-center justify-center border-4 border-indigo-500 border-dashed m-4 rounded-xl">
-               <div className="text-white font-bold text-xl">Drop Image Here</div>
+              <div className="text-white font-bold text-xl">
+                Drop Image Here
+              </div>
             </div>
           )}
 
-          <div 
+          <div
             ref={cardRef}
             className="relative shadow-2xl overflow-hidden group transition-all duration-300"
             style={{
               width: state.width,
               height: state.height,
               background: getBackgroundStyle(state.background),
-              borderRadius: '24px',
+              borderRadius: "24px",
             }}
-            onClick={() => setState({...state, selectedId: null})}
+            onClick={() => setState({ ...state, selectedId: null })}
           >
             {/* Grid Overlay */}
             {state.showGrid && (
-              <div className="absolute inset-0 pointer-events-none opacity-20" 
-                style={{ backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`, backgroundSize: '40px 40px' }} 
+              <div
+                className="absolute inset-0 pointer-events-none opacity-20"
+                style={{
+                  backgroundImage: `linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px)`,
+                  backgroundSize: "40px 40px",
+                }}
               />
             )}
 
             {/* Noise Overlay */}
-            <div className="absolute inset-0 pointer-events-none opacity-[0.05]" style={{ filter: 'contrast(300%) brightness(100%)', backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+            <div
+              className="absolute inset-0 pointer-events-none opacity-[0.05]"
+              style={{
+                filter: "contrast(300%) brightness(100%)",
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+              }}
+            />
 
             {/* Elements */}
             <AnimatePresence>
               {state.elements.map((el) => (
-                <DraggableElement 
-                  key={el.id} 
-                  element={el} 
+                <DraggableElement
+                  key={el.id}
+                  element={el}
                   isSelected={state.selectedId === el.id}
                   onSelect={(e) => {
                     e.stopPropagation();
-                    setState({...state, selectedId: el.id});
+                    setState({ ...state, selectedId: el.id });
                   }}
                   onUpdate={(updates) => updateElement(el.id, updates)}
                 />
@@ -481,93 +919,189 @@ export default function CardArchitectPro() {
             </AnimatePresence>
           </div>
         </div>
-        
+
         {/* Zoom Controls */}
         <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-[#0c0c0e] p-2 rounded-lg border border-white/10 shadow-xl">
-           <button className="p-1 hover:bg-white/10 rounded"><Minus size={14} /></button>
-           <span className="text-xs font-mono w-8 text-center">100%</span>
-           <button className="p-1 hover:bg-white/10 rounded"><Plus size={14} /></button>
+          <button className="p-1 hover:bg-white/10 rounded">
+            <Minus size={14} />
+          </button>
+          <span className="text-xs font-mono w-8 text-center">100%</span>
+          <button className="p-1 hover:bg-white/10 rounded">
+            <Plus size={14} />
+          </button>
         </div>
       </div>
 
       {/* --- RIGHT SIDEBAR: PROPERTIES --- */}
       <div className="w-80 bg-[#0c0c0e] border-l border-white/10 flex flex-col z-20 overflow-y-auto custom-scrollbar">
-        
         {/* Layer Header */}
         <div className="p-4 border-b border-white/10">
-           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
-             <Settings size={14} /> Properties
-           </h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
+            <Settings size={14} /> Properties
+          </h2>
         </div>
 
         {selectedEl ? (
           <div className="p-6 space-y-8 animate-in slide-in-from-right-4 duration-200">
             {/* Element Specific Controls */}
-            
+
             {/* TEXT CONTROLS */}
-            {selectedEl.type === 'text' && (
+            {selectedEl.type === "text" && (
               <section className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                   <Label>Text Content</Label>
-                   <Button variant="danger" icon={Trash2} onClick={() => deleteElement(selectedEl.id)} className="px-2 py-1 h-6">Remove</Button>
+                  <Label>Text Content</Label>
+                  <Button
+                    variant="danger"
+                    icon={Trash2}
+                    onClick={() => deleteElement(selectedEl.id)}
+                    className="px-2 py-1 h-6"
+                  >
+                    Remove
+                  </Button>
                 </div>
                 <textarea
                   value={selectedEl.content}
-                  onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
+                  onChange={(e) =>
+                    updateElement(selectedEl.id, { content: e.target.value })
+                  }
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
                   rows={3}
                 />
-                
+
                 <div className="space-y-4 pt-4 border-t border-white/5">
-                  <Select 
-                    label="Typography" 
-                    options={FONTS} 
-                    value={selectedEl.fontFamily} 
-                    onChange={(v: string) => updateElement(selectedEl.id, { fontFamily: v })} 
+                  <Select
+                    label="Typography"
+                    options={FONTS}
+                    value={selectedEl.fontFamily}
+                    onChange={(v) =>
+                      updateElement(selectedEl.id, { fontFamily: v })
+                    }
                   />
                   <div className="grid grid-cols-2 gap-3">
-                    <Slider label="Size" min={10} max={200} value={selectedEl.fontSize} onChange={(v: number) => updateElement(selectedEl.id, { fontSize: v })} />
-                    <Slider label="Weight" min={100} max={900} value={selectedEl.fontWeight} onChange={(v: number) => updateElement(selectedEl.id, { fontWeight: v })} />
+                    <Slider
+                      label="Size"
+                      min={10}
+                      max={200}
+                      value={selectedEl.fontSize}
+                      onChange={(v) =>
+                        updateElement(selectedEl.id, { fontSize: v })
+                      }
+                    />
+                    <Slider
+                      label="Weight"
+                      min={100}
+                      max={900}
+                      value={selectedEl.fontWeight}
+                      onChange={(v) =>
+                        updateElement(selectedEl.id, { fontWeight: v })
+                      }
+                    />
                   </div>
-                  <Slider label="Letter Spacing" min={-5} max={10} value={selectedEl.letterSpacing} onChange={(v: number) => updateElement(selectedEl.id, { letterSpacing: v })} />
-                  <ColorInput label="Color" value={selectedEl.color} onChange={(v: string) => updateElement(selectedEl.id, { color: v })} />
+                  <Slider
+                    label="Letter Spacing"
+                    min={-5}
+                    max={10}
+                    value={selectedEl.letterSpacing}
+                    onChange={(v) =>
+                      updateElement(selectedEl.id, { letterSpacing: v })
+                    }
+                  />
+                  <ColorInput
+                    label="Color"
+                    value={selectedEl.color}
+                    onChange={(v) => updateElement(selectedEl.id, { color: v })}
+                  />
                 </div>
               </section>
             )}
 
             {/* IMAGE/QR CONTROLS */}
-            {(selectedEl.type === 'image' || selectedEl.type === 'qr') && (
-               <section className="space-y-4">
-                 <div className="flex justify-between items-center mb-2">
-                   <Label>Dimensions</Label>
-                   <Button variant="danger" icon={Trash2} onClick={() => deleteElement(selectedEl.id)} className="px-2 py-1 h-6">Remove</Button>
+            {(selectedEl.type === "image" || selectedEl.type === "qr") && (
+              <section className="space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Dimensions</Label>
+                  <Button
+                    variant="danger"
+                    icon={Trash2}
+                    onClick={() => deleteElement(selectedEl.id)}
+                    className="px-2 py-1 h-6"
+                  >
+                    Remove
+                  </Button>
                 </div>
-                {selectedEl.type === 'qr' && (
-                  <input 
-                    type="text" 
+                {selectedEl.type === "qr" && (
+                  <input
+                    type="text"
                     value={selectedEl.content}
-                    onChange={(e) => updateElement(selectedEl.id, { content: e.target.value })}
+                    onChange={(e) =>
+                      updateElement(selectedEl.id, { content: e.target.value })
+                    }
                     placeholder="https://..."
                     className="w-full bg-slate-800 border-slate-700 rounded px-3 py-2 text-xs mb-4 text-white"
                   />
                 )}
-                 <div className="grid grid-cols-2 gap-3">
-                    <Slider label="Width" min={20} max={300} value={selectedEl.width} onChange={(v: number) => updateElement(selectedEl.id, { width: v })} />
-                    <Slider label="Height" min={20} max={300} value={selectedEl.height} onChange={(v: number) => updateElement(selectedEl.id, { height: v })} />
-                  </div>
-               </section>
+                <div className="grid grid-cols-2 gap-3">
+                  <Slider
+                    label="Width"
+                    min={20}
+                    max={300}
+                    value={selectedEl.width || 100}
+                    onChange={(v) => updateElement(selectedEl.id, { width: v })}
+                  />
+                  <Slider
+                    label="Height"
+                    min={20}
+                    max={300}
+                    value={selectedEl.height || 100}
+                    onChange={(v) =>
+                      updateElement(selectedEl.id, { height: v })
+                    }
+                  />
+                </div>
+              </section>
             )}
 
             {/* COMMON CONTROLS */}
             <section className="space-y-4 pt-4 border-t border-white/5">
               <Label>Transform</Label>
               <div className="grid grid-cols-2 gap-3">
-                 <Slider label="Opacity" min={0} max={1} value={selectedEl.opacity} onChange={(v: number) => updateElement(selectedEl.id, { opacity: v })} />
-                 <Slider label="Rotate" min={-180} max={180} value={selectedEl.rotation} onChange={(v: number) => updateElement(selectedEl.id, { rotation: v })} />
+                <Slider
+                  label="Opacity"
+                  min={0}
+                  max={1}
+                  value={selectedEl.opacity}
+                  onChange={(v) => updateElement(selectedEl.id, { opacity: v })}
+                />
+                <Slider
+                  label="Rotate"
+                  min={-180}
+                  max={180}
+                  value={selectedEl.rotation}
+                  onChange={(v) =>
+                    updateElement(selectedEl.id, { rotation: v })
+                  }
+                />
               </div>
               <div className="flex gap-2">
-                 <Button className="flex-1" icon={Move} onClick={() => updateElement(selectedEl.id, { x: state.width/2 - 50, y: state.height/2 - 20 })}>Center</Button>
-                 <Button className="flex-1" icon={Copy} onClick={() => addElement(selectedEl.type)}>Duplicate</Button>
+                <Button
+                  className="flex-1"
+                  icon={Move}
+                  onClick={() =>
+                    updateElement(selectedEl.id, {
+                      x: state.width / 2 - 50,
+                      y: state.height / 2 - 20,
+                    })
+                  }
+                >
+                  Center
+                </Button>
+                <Button
+                  className="flex-1"
+                  icon={Copy}
+                  onClick={() => addElement(selectedEl.type)}
+                >
+                  Duplicate
+                </Button>
               </div>
             </section>
           </div>
@@ -579,59 +1113,85 @@ export default function CardArchitectPro() {
                 <Palette size={16} />
                 <span className="text-xs font-bold uppercase">Background</span>
               </div>
-              
+
               <div className="flex bg-slate-800 p-1 rounded-lg mb-6">
-                {['solid', 'gradient', 'mesh'].map(t => (
-                  <button 
+                {["solid", "gradient", "mesh"].map((t) => (
+                  <button
                     key={t}
                     onClick={() => updateBackground({ type: t as any })}
-                    className={`flex-1 text-[10px] uppercase font-bold py-1.5 rounded-md transition-all ${state.background.type === t ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                    className={`flex-1 text-[10px] uppercase font-bold py-1.5 rounded-md transition-all ${
+                      state.background.type === t
+                        ? "bg-indigo-600 text-white shadow-sm"
+                        : "text-slate-500 hover:text-slate-300"
+                    }`}
                   >
                     {t}
                   </button>
                 ))}
               </div>
 
-              {state.background.type !== 'mesh' && (
-                 <>
-                  <ColorInput label="Primary Color" value={state.background.color1} onChange={(v: string) => updateBackground({ color1: v })} />
-                  {state.background.type === 'gradient' && (
+              {state.background.type !== "mesh" && (
+                <>
+                  <ColorInput
+                    label="Primary Color"
+                    value={state.background.color1}
+                    onChange={(v) => updateBackground({ color1: v })}
+                  />
+                  {state.background.type === "gradient" && (
                     <>
-                      <ColorInput label="Secondary Color" value={state.background.color2} onChange={(v: string) => updateBackground({ color2: v })} />
-                      <Select 
+                      <ColorInput
+                        label="Secondary Color"
+                        value={state.background.color2}
+                        onChange={(v) => updateBackground({ color2: v })}
+                      />
+                      <Select
                         label="Direction"
                         value={state.background.direction}
-                        onChange={(v: string) => updateBackground({ direction: v })}
+                        onChange={(v) =>
+                          updateBackground({ direction: v as any })
+                        }
                         options={[
-                          {name: 'To Bottom Right', value: 'br'},
-                          {name: 'To Right', value: 'r'},
-                          {name: 'To Bottom', value: 'b'},
+                          { name: "To Bottom Right", value: "br" },
+                          { name: "To Right", value: "r" },
+                          { name: "To Bottom", value: "b" },
                         ]}
                       />
                     </>
                   )}
-                 </>
+                </>
               )}
-              
+
               <div className="pt-4 border-t border-white/5 space-y-4">
-                 <Slider label="Noise Grain" min={0} max={0.5} value={state.background.noise} onChange={(v: number) => updateBackground({ noise: v })} />
-                 <Slider label="Blur Effect" min={0} max={50} value={state.background.blur} onChange={(v: number) => updateBackground({ blur: v })} />
+                <Slider
+                  label="Noise Grain"
+                  min={0}
+                  max={0.5}
+                  value={state.background.noise}
+                  onChange={(v) => updateBackground({ noise: v })}
+                />
+                <Slider
+                  label="Blur Effect"
+                  min={0}
+                  max={50}
+                  value={state.background.blur}
+                  onChange={(v) => updateBackground({ blur: v })}
+                />
               </div>
             </section>
 
             {/* Layout Settings */}
             <section className="pt-4 border-t border-white/5">
-               <Label>Card Dimensions</Label>
-               <div className="grid grid-cols-2 gap-3 mt-2">
-                 <div className="bg-slate-800 p-2 rounded text-center">
-                    <div className="text-[10px] text-slate-500">W</div>
-                    <div className="text-sm font-mono">{state.width}px</div>
-                 </div>
-                 <div className="bg-slate-800 p-2 rounded text-center">
-                    <div className="text-[10px] text-slate-500">H</div>
-                    <div className="text-sm font-mono">{state.height}px</div>
-                 </div>
-               </div>
+              <Label>Card Dimensions</Label>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                <div className="bg-slate-800 p-2 rounded text-center">
+                  <div className="text-[10px] text-slate-500">W</div>
+                  <div className="text-sm font-mono">{state.width}px</div>
+                </div>
+                <div className="bg-slate-800 p-2 rounded text-center">
+                  <div className="text-[10px] text-slate-500">H</div>
+                  <div className="text-sm font-mono">{state.height}px</div>
+                </div>
+              </div>
             </section>
           </div>
         )}
@@ -644,7 +1204,17 @@ export default function CardArchitectPro() {
 // 6. HELPER COMPONENTS
 // ==========================================
 
-const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: { element: CardElement, isSelected: boolean, onSelect: (e: any) => void, onUpdate: (u: any) => void }) => {
+const DraggableElement = ({
+  element,
+  isSelected,
+  onSelect,
+  onUpdate,
+}: {
+  element: CardElement;
+  isSelected: boolean;
+  onSelect: (e: any) => void;
+  onUpdate: (u: any) => void;
+}) => {
   const controls = useDragControls();
 
   return (
@@ -653,22 +1223,31 @@ const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: { element
       dragMomentum={false}
       dragControls={controls}
       onDragEnd={(_, info) => {
-        onUpdate({ x: element.x + info.offset.x, y: element.y + info.offset.y });
+        onUpdate({
+          x: element.x + info.offset.x,
+          y: element.y + info.offset.y,
+        });
       }}
       initial={{ x: element.x, y: element.y, opacity: 0, scale: 0.8 }}
-      animate={{ 
-        x: element.x, 
-        y: element.y, 
-        opacity: element.opacity, 
-        scale: 1, 
+      animate={{
+        x: element.x,
+        y: element.y,
+        opacity: element.opacity,
+        scale: 1,
         rotate: element.rotation,
-        zIndex: isSelected ? 100 : element.zIndex
+        zIndex: isSelected ? 100 : element.zIndex,
       }}
       onClick={onSelect}
-      className={`absolute cursor-move group ${isSelected ? 'ring-1 ring-indigo-500' : 'hover:ring-1 hover:ring-white/30'}`}
-      style={{
-         // Position is handled by motion animate
-      }}
+      className={`absolute cursor-move group ${
+        isSelected
+          ? "ring-1 ring-indigo-500"
+          : "hover:ring-1 hover:ring-white/30"
+      }`}
+      style={
+        {
+          // Position is handled by motion animate
+        }
+      }
     >
       {/* Selection Handles */}
       {isSelected && (
@@ -679,58 +1258,81 @@ const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: { element
       )}
 
       {/* Text Element */}
-      {element.type === 'text' && (
-        <div 
-           className="whitespace-nowrap px-2 py-1"
-           style={{ 
-             fontSize: `${element.fontSize}px`, 
-             fontWeight: element.fontWeight, 
-             color: element.color,
-             fontFamily: element.fontFamily,
-             letterSpacing: `${element.letterSpacing}px`
-           }}
+      {element.type === "text" && (
+        <div
+          className="whitespace-nowrap px-2 py-1"
+          style={{
+            fontSize: `${element.fontSize}px`,
+            fontWeight: element.fontWeight,
+            color: element.color,
+            fontFamily: element.fontFamily,
+            letterSpacing: `${element.letterSpacing}px`,
+          }}
         >
           {element.content}
         </div>
       )}
 
       {/* Image Element */}
-      {element.type === 'image' && (
-        <img 
-          src={element.content} 
+      {element.type === "image" && (
+        <img
+          src={element.content}
           alt="User Asset"
           className="pointer-events-none rounded-lg object-cover"
-          style={{ width: element.width, height: element.height }} 
+          style={{ width: element.width, height: element.height }}
         />
       )}
 
       {/* QR Element */}
-      {element.type === 'qr' && (
-        <div style={{ width: element.width, height: element.height }} className="bg-white p-2 rounded-lg">
-           <svg viewBox="0 0 32 32" className="w-full h-full fill-black">
-             <path d={getQRCodePath()} />
-           </svg>
+      {element.type === "qr" && (
+        <div
+          style={{ width: element.width, height: element.height }}
+          className="bg-white p-2 rounded-lg"
+        >
+          <svg viewBox="0 0 32 32" className="w-full h-full fill-black">
+            <path d={getQRCodePath()} />
+          </svg>
         </div>
       )}
     </motion.div>
   );
 };
 
-const ToolBtn = ({ icon: Icon, onClick, text, active, disabled }: any) => (
-  <button 
+interface ToolBtnProps {
+  icon: React.ElementType;
+  onClick: () => void;
+  text?: string;
+  active?: boolean;
+  disabled?: boolean;
+}
+
+const ToolBtn = ({
+  icon: Icon,
+  onClick,
+  text,
+  active,
+  disabled,
+}: ToolBtnProps) => (
+  <button
     onClick={onClick}
     disabled={disabled}
     className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
-      active 
-        ? 'bg-indigo-600 text-white' 
-        : 'text-slate-400 hover:bg-white/10 hover:text-white'
-    } ${disabled ? 'opacity-30 cursor-not-allowed' : ''}`}
+      active
+        ? "bg-indigo-600 text-white"
+        : "text-slate-400 hover:bg-white/10 hover:text-white"
+    } ${disabled ? "opacity-30 cursor-not-allowed" : ""}`}
   >
     <Icon size={20} />
   </button>
 );
 
-const Tooltip = ({ children, text }: any) => (
+const Tooltip = ({
+  children,
+  text,
+}: {
+  children: React.ReactNode;
+  text: string;
+}) => (
   <div className="group relative flex items-center">
     {children}
     <div className="absolute left-14 bg-slate-800 text-white text-[10px] uppercase font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-slate-700">
@@ -741,22 +1343,26 @@ const Tooltip = ({ children, text }: any) => (
 );
 
 const getBackgroundStyle = (bg: BackgroundSettings) => {
-  const noise = bg.noise > 0 ? `url("data:image/svg+xml,...")` : ''; // simplified for brevity
-  
-  if (bg.type === 'solid') return bg.color1;
-  
-  if (bg.type === 'gradient') {
-    const dirMap: any = { 'br': 'to bottom right', 'r': 'to right', 'b': 'to bottom' };
-    return `linear-gradient(${dirMap[bg.direction]}, ${bg.color1}, ${bg.color2})`;
+  if (bg.type === "solid") return bg.color1;
+
+  if (bg.type === "gradient") {
+    const dirMap: Record<string, string> = {
+      br: "to bottom right",
+      r: "to right",
+      b: "to bottom",
+    };
+    return `linear-gradient(${dirMap[bg.direction]}, ${bg.color1}, ${
+      bg.color2
+    })`;
   }
-  
-  if (bg.type === 'mesh') {
+
+  if (bg.type === "mesh") {
     return `
       radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
       radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
       radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)
     `;
   }
-  
-  return '#000';
+
+  return "#000";
 };

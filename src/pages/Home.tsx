@@ -7,13 +7,17 @@ import {
   Circle,
   Copy,
   Download,
+  Globe,
   Grid,
   Image as ImageIcon,
   Layout,
   LayoutTemplate,
+  Mail,
+  MapPin,
   Minus,
   Move,
   Palette,
+  Phone,
   Plus,
   QrCode,
   Settings,
@@ -30,14 +34,15 @@ import { useDropzone } from "react-dropzone";
 // 1. TYPES & CONSTANTS
 // ==========================================
 
-type ElementType = "text" | "image" | "qr" | "box" | "circle";
+type ElementType = "text" | "image" | "qr" | "box" | "circle" | "icon";
+type IconType = "phone" | "mail" | "globe" | "map-pin" | "briefcase";
 type BackgroundType = "solid" | "gradient" | "mesh";
 type GradientDirection = "br" | "r" | "b" | "tr" | "tl";
 
 interface CardElement {
   id: string;
   type: ElementType;
-  content: string; // Text content or Image URL
+  content: string; // Text content, Image URL, or Icon Name
   x: number;
   y: number;
   width?: number;
@@ -45,13 +50,14 @@ interface CardElement {
   // Style Props
   fontSize: number;
   fontWeight: number;
-  color: string; // Text color OR Shape background color
+  color: string;
   fontFamily: string;
   opacity: number;
   letterSpacing: number;
   rotation: number;
   zIndex: number;
   borderRadius?: number;
+  iconType?: IconType; // Specific for icon elements
 }
 
 interface BackgroundSettings {
@@ -89,7 +95,8 @@ const FONTS = [
   { name: "Playfair Display", value: '"Playfair Display", serif' },
   { name: "Roboto Mono", value: '"Roboto Mono", monospace' },
   { name: "Oswald", value: '"Oswald", sans-serif' },
-  { name: "Dancing Script", value: "cursive" }, // Fallback for script
+  { name: "Lato", value: '"Lato", sans-serif' },
+  { name: "Montserrat", value: '"Montserrat", sans-serif' },
 ];
 
 const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
@@ -100,10 +107,10 @@ const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
 
 const TEMPLATES: Template[] = [
   {
-    id: "luxury-gold",
-    name: "Luxury Gold",
+    id: "executive-luxury",
+    name: "Executive Gold",
     category: "Premium",
-    thumbnail: "linear-gradient(135deg, #000 0%, #333 100%)",
+    thumbnail: "linear-gradient(135deg, #111 0%, #333 100%)",
     state: {
       background: {
         type: "solid",
@@ -111,77 +118,305 @@ const TEMPLATES: Template[] = [
         color2: "",
         color3: "",
         direction: "br",
-        noise: 0.1,
+        noise: 0.05,
         blur: 0,
       },
       elements: [
-        // Gold Borders/Accents simulated with boxes
+        // --- GOLD ACCENTS ---
+        // Top Border
         {
-          id: "lg-bg",
+          id: "ex-b1",
           type: "box",
           content: "",
           x: 20,
           y: 20,
           width: 560,
-          height: 310,
+          height: 2,
           fontSize: 0,
           fontWeight: 0,
-          color: "transparent",
+          color: "#fbbf24",
           fontFamily: "",
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
           zIndex: 1,
           borderRadius: 0,
-        }, // Border handled via CSS in real app, simulated here
+        },
+        // Bottom Border
         {
-          id: "lg-1",
+          id: "ex-b2",
+          type: "box",
+          content: "",
+          x: 20,
+          y: 328,
+          width: 560,
+          height: 2,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 0,
+        },
+        // Vertical Divider
+        {
+          id: "ex-div",
+          type: "box",
+          content: "",
+          x: 340,
+          y: 60,
+          width: 1,
+          height: 230,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#3f3f46",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 0,
+        },
+
+        // --- IDENTITY SECTION (LEFT) ---
+        {
+          id: "ex-name",
           type: "text",
-          content: "DIKIE DEV",
-          x: 0,
-          y: 120,
-          width: 600,
+          content: "RICHARD STERLING",
+          x: 40,
+          y: 130,
+          width: 300,
           height: 0,
-          fontSize: 42,
-          fontWeight: 400,
+          fontSize: 32,
+          fontWeight: 700,
           color: "#fbbf24",
           fontFamily: '"Playfair Display", serif',
           opacity: 1,
-          letterSpacing: 2,
+          letterSpacing: 1,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "lg-2",
+          id: "ex-title",
           type: "text",
-          content: "EST. 2025",
-          x: 0,
+          content: "Senior Executive Partner",
+          x: 40,
           y: 170,
-          width: 600,
+          width: 300,
           height: 0,
           fontSize: 12,
-          fontWeight: 400,
-          color: "#a1a1aa",
+          fontWeight: 500,
+          color: "#d4d4d8",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: 6,
+          letterSpacing: 3,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        {
+          id: "ex-logo-box",
+          type: "box",
+          content: "",
+          x: 40,
+          y: 50,
+          width: 40,
+          height: 40,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 0.1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 4,
+        },
+        {
+          id: "ex-logo-txt",
+          type: "text",
+          content: "S",
+          x: 50,
+          y: 52,
+          width: 0,
+          height: 0,
+          fontSize: 24,
+          fontWeight: 900,
+          color: "#fbbf24",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        // --- CONTACT DETAILS (RIGHT) ---
+        // Phone
+        {
+          id: "ex-ic1",
+          type: "icon",
+          iconType: "phone",
+          content: "",
+          x: 370,
+          y: 80,
+          width: 16,
+          height: 16,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "lg-3",
+          id: "ex-tx1",
           type: "text",
-          content: "PRESIDENT & CEO",
-          x: 0,
-          y: 280,
-          width: 600,
+          content: "+1 (555) 123-4567",
+          x: 400,
+          y: 78,
+          width: 0,
           height: 0,
-          fontSize: 10,
-          fontWeight: 700,
-          color: "#fbbf24",
+          fontSize: 11,
+          fontWeight: 400,
+          color: "#e4e4e7",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: 2,
+          letterSpacing: 0.5,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        // Email
+        {
+          id: "ex-ic2",
+          type: "icon",
+          iconType: "mail",
+          content: "",
+          x: 370,
+          y: 110,
+          width: 16,
+          height: 16,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "ex-tx2",
+          type: "text",
+          content: "richard@sterling.com",
+          x: 400,
+          y: 108,
+          width: 0,
+          height: 0,
+          fontSize: 11,
+          fontWeight: 400,
+          color: "#e4e4e7",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0.5,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        // Web
+        {
+          id: "ex-ic3",
+          type: "icon",
+          iconType: "globe",
+          content: "",
+          x: 370,
+          y: 140,
+          width: 16,
+          height: 16,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "ex-tx3",
+          type: "text",
+          content: "www.sterling.corp",
+          x: 400,
+          y: 138,
+          width: 0,
+          height: 0,
+          fontSize: 11,
+          fontWeight: 400,
+          color: "#e4e4e7",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0.5,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        // Address
+        {
+          id: "ex-ic4",
+          type: "icon",
+          iconType: "map-pin",
+          content: "",
+          x: 370,
+          y: 170,
+          width: 16,
+          height: 16,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fbbf24",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "ex-tx4",
+          type: "text",
+          content: "100 Wall Street,\nNew York, NY 10005",
+          x: 400,
+          y: 168,
+          width: 0,
+          height: 0,
+          fontSize: 11,
+          fontWeight: 400,
+          color: "#e4e4e7",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0.5,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        // QR Code
+        {
+          id: "ex-qr",
+          type: "qr",
+          content: "https://dikie.dev",
+          x: 480,
+          y: 230,
+          width: 80,
+          height: 80,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#ffffff",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
@@ -189,10 +424,10 @@ const TEMPLATES: Template[] = [
     },
   },
   {
-    id: "corporate-pro",
-    name: "Corporate Blue",
+    id: "clean-corporate",
+    name: "Modern Corporate",
     category: "Business",
-    thumbnail: "#fff",
+    thumbnail: "#f8fafc",
     state: {
       background: {
         type: "solid",
@@ -204,33 +439,119 @@ const TEMPLATES: Template[] = [
         blur: 0,
       },
       elements: [
-        // Blue Sidebar
         {
-          id: "cp-shp1",
+          id: "cc-bg",
           type: "box",
           content: "",
           x: 0,
           y: 0,
-          width: 200,
+          width: 220,
           height: 350,
           fontSize: 0,
           fontWeight: 0,
-          color: "#1e3a8a",
+          color: "#0f172a",
           fontFamily: "",
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 1,
+          zIndex: 0,
           borderRadius: 0,
         },
-        // Accent Line
         {
-          id: "cp-shp2",
+          id: "cc-logo",
+          type: "text",
+          content: "DIKIE.",
+          x: 40,
+          y: 40,
+          width: 0,
+          height: 0,
+          fontSize: 28,
+          fontWeight: 800,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cc-tag",
+          type: "text",
+          content: "Design Solutions",
+          x: 40,
+          y: 75,
+          width: 0,
+          height: 0,
+          fontSize: 10,
+          fontWeight: 400,
+          color: "#94a3b8",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        {
+          id: "cc-qr",
+          type: "qr",
+          content: "contact",
+          x: 40,
+          y: 240,
+          width: 80,
+          height: 80,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#ffffff",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        {
+          id: "cc-name",
+          type: "text",
+          content: "ALEXANDER SMITH",
+          x: 260,
+          y: 60,
+          width: 0,
+          height: 0,
+          fontSize: 24,
+          fontWeight: 800,
+          color: "#0f172a",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cc-role",
+          type: "text",
+          content: "Lead Developer",
+          x: 260,
+          y: 90,
+          width: 0,
+          height: 0,
+          fontSize: 14,
+          fontWeight: 600,
+          color: "#3b82f6",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+
+        {
+          id: "cc-l1",
           type: "box",
           content: "",
-          x: 200,
-          y: 40,
-          width: 400,
+          x: 260,
+          y: 110,
+          width: 40,
           height: 4,
           fontSize: 0,
           fontWeight: 0,
@@ -239,510 +560,111 @@ const TEMPLATES: Template[] = [
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 2,
-          borderRadius: 0,
-        },
-
-        {
-          id: "cp-1",
-          type: "text",
-          content: "JD",
-          x: 60,
-          y: 140,
-          fontSize: 64,
-          fontWeight: 900,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 0.2,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cp-2",
-          type: "text",
-          content: "John Doe",
-          x: 230,
-          y: 80,
-          fontSize: 32,
-          fontWeight: 800,
-          color: "#0f172a",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: -1,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cp-3",
-          type: "text",
-          content: "Solutions Architect",
-          x: 230,
-          y: 120,
-          fontSize: 14,
-          fontWeight: 600,
-          color: "#3b82f6",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 1,
-          rotation: 0,
-          zIndex: 10,
-        },
-
-        {
-          id: "cp-4",
-          type: "text",
-          content: "john@company.com",
-          x: 230,
-          y: 250,
-          fontSize: 12,
-          fontWeight: 500,
-          color: "#64748b",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cp-5",
-          type: "text",
-          content: "+1 555-0123",
-          x: 230,
-          y: 270,
-          fontSize: 12,
-          fontWeight: 500,
-          color: "#64748b",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-
-        {
-          id: "cp-qr",
-          type: "qr",
-          content: "https://dikie.dev",
-          x: 65,
-          y: 240,
-          width: 70,
-          height: 70,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-      ],
-    },
-  },
-  {
-    id: "creative-studio",
-    name: "Bold Studio",
-    category: "Creative",
-    thumbnail: "#facc15",
-    state: {
-      background: {
-        type: "solid",
-        color1: "#facc15",
-        color2: "",
-        color3: "",
-        direction: "br",
-        noise: 0,
-        blur: 0,
-      },
-      elements: [
-        {
-          id: "cs-circle",
-          type: "circle",
-          content: "",
-          x: 300,
-          y: -50,
-          width: 400,
-          height: 400,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "#000000",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
           zIndex: 1,
-          borderRadius: 0,
+          borderRadius: 2,
         },
+
         {
-          id: "cs-1",
-          type: "text",
-          content: "WE ARE",
-          x: 40,
-          y: 80,
-          fontSize: 14,
-          fontWeight: 900,
-          color: "#000000",
-          fontFamily: '"Oswald", sans-serif',
-          opacity: 1,
-          letterSpacing: 2,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cs-2",
-          type: "text",
-          content: "OPEN",
-          x: 40,
-          y: 100,
-          fontSize: 80,
-          fontWeight: 900,
-          color: "#000000",
-          fontFamily: '"Oswald", sans-serif',
-          opacity: 1,
-          letterSpacing: -2,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cs-3",
-          type: "text",
-          content: "dikie.dev",
-          x: 400,
-          y: 160,
-          fontSize: 24,
-          fontWeight: 700,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: -1,
-          rotation: 0,
-          zIndex: 10,
-        },
-      ],
-    },
-  },
-  {
-    id: "modern-tech",
-    name: "Tech Dark",
-    category: "Tech",
-    thumbnail: "#1e293b",
-    state: {
-      background: {
-        type: "gradient",
-        color1: "#0f172a",
-        color2: "#334155",
-        color3: "",
-        direction: "br",
-        noise: 0.05,
-        blur: 0,
-      },
-      elements: [
-        // Pill Shape
-        {
-          id: "mt-pill",
-          type: "box",
+          id: "cc-p",
+          type: "icon",
+          iconType: "phone",
           content: "",
-          x: 40,
-          y: 40,
-          width: 100,
-          height: 40,
+          x: 260,
+          y: 150,
+          width: 14,
+          height: 14,
           fontSize: 0,
           fontWeight: 0,
-          color: "#22d3ee",
+          color: "#64748b",
           fontFamily: "",
-          opacity: 0.2,
+          opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 5,
-          borderRadius: 20,
-        },
-        {
-          id: "mt-1",
-          type: "text",
-          content: "DEV",
-          x: 65,
-          y: 50,
-          fontSize: 14,
-          fontWeight: 700,
-          color: "#22d3ee",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 2,
-          rotation: 0,
           zIndex: 10,
         },
         {
-          id: "mt-2",
+          id: "cc-pt",
           type: "text",
-          content: "DIKIE",
-          x: 40,
-          y: 120,
-          fontSize: 48,
-          fontWeight: 800,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: -2,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "mt-3",
-          type: "text",
-          content: "Engineering Lead",
-          x: 40,
-          y: 180,
-          fontSize: 16,
+          content: "+1 234 567 890",
+          x: 290,
+          y: 148,
+          width: 0,
+          height: 0,
+          fontSize: 12,
           fontWeight: 500,
-          color: "#94a3b8",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "mt-qr",
-          type: "qr",
-          content: "vcard",
-          x: 450,
-          y: 40,
-          width: 100,
-          height: 100,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "mt-line",
-          type: "box",
-          content: "",
-          x: 40,
-          y: 280,
-          width: 520,
-          height: 1,
-          fontSize: 0,
-          fontWeight: 0,
           color: "#334155",
-          fontFamily: "",
+          fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 5,
+          zIndex: 10,
         },
-      ],
-    },
-  },
-  {
-    id: "salon-pastel",
-    name: "Salon Pastel",
-    category: "Beauty",
-    thumbnail: "#fdf2f8",
-    state: {
-      background: {
-        type: "solid",
-        color1: "#fdf2f8",
-        color2: "",
-        color3: "",
-        direction: "br",
-        noise: 0.02,
-        blur: 0,
-      },
-      elements: [
+
         {
-          id: "sp-circle",
-          type: "circle",
+          id: "cc-e",
+          type: "icon",
+          iconType: "mail",
           content: "",
-          x: 220,
-          y: 20,
-          width: 160,
-          height: 160,
+          x: 260,
+          y: 180,
+          width: 14,
+          height: 14,
           fontSize: 0,
           fontWeight: 0,
-          color: "#fce7f3",
+          color: "#64748b",
           fontFamily: "",
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 1,
-          borderRadius: 0,
-        },
-        {
-          id: "sp-1",
-          type: "text",
-          content: "Bella",
-          x: 250,
-          y: 60,
-          fontSize: 42,
-          fontWeight: 400,
-          color: "#db2777",
-          fontFamily: '"Playfair Display", serif',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: -5,
           zIndex: 10,
         },
         {
-          id: "sp-2",
+          id: "cc-et",
           type: "text",
-          content: "Beauty & Spa",
-          x: 235,
-          y: 110,
+          content: "hello@dikie.dev",
+          x: 290,
+          y: 178,
+          width: 0,
+          height: 0,
           fontSize: 12,
-          fontWeight: 600,
-          color: "#9d174d",
+          fontWeight: 500,
+          color: "#334155",
           fontFamily: "Inter, sans-serif",
-          opacity: 0.8,
-          letterSpacing: 2,
+          opacity: 1,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
+
         {
-          id: "sp-3",
-          type: "box",
+          id: "cc-w",
+          type: "icon",
+          iconType: "globe",
           content: "",
-          x: 200,
-          y: 200,
-          width: 200,
-          height: 1,
+          x: 260,
+          y: 210,
+          width: 14,
+          height: 14,
           fontSize: 0,
           fontWeight: 0,
-          color: "#fbcfe8",
+          color: "#64748b",
           fontFamily: "",
           opacity: 1,
           letterSpacing: 0,
           rotation: 0,
-          zIndex: 5,
-        },
-        {
-          id: "sp-4",
-          type: "text",
-          content: "123 Fashion Ave, NY",
-          x: 200,
-          y: 220,
-          fontSize: 12,
-          fontWeight: 400,
-          color: "#831843",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-      ],
-    },
-  },
-  {
-    id: "swiss-grid",
-    name: "Swiss Grid",
-    category: "Minimal",
-    thumbnail: "#f3f4f6",
-    state: {
-      background: {
-        type: "solid",
-        color1: "#f3f4f6",
-        color2: "",
-        color3: "",
-        direction: "br",
-        noise: 0,
-        blur: 0,
-      },
-      elements: [
-        // The Grid Layout
-        {
-          id: "sg-h",
-          type: "box",
-          content: "",
-          x: 0,
-          y: 175,
-          width: 600,
-          height: 2,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "#e5e7eb",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 1,
-        },
-        {
-          id: "sg-v",
-          type: "box",
-          content: "",
-          x: 300,
-          y: 0,
-          width: 2,
-          height: 350,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "#e5e7eb",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 1,
-        },
-        {
-          id: "sg-1",
-          type: "text",
-          content: "Helvetica",
-          x: 20,
-          y: 130,
-          fontSize: 24,
-          fontWeight: 700,
-          color: "#000000",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: -1,
-          rotation: 0,
           zIndex: 10,
         },
         {
-          id: "sg-2",
+          id: "cc-wt",
           type: "text",
-          content: "International",
-          x: 20,
-          y: 160,
+          content: "www.dikie.dev",
+          x: 290,
+          y: 208,
+          width: 0,
+          height: 0,
           fontSize: 12,
-          fontWeight: 400,
-          color: "#6b7280",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "sg-3",
-          type: "text",
-          content: "Zurich",
-          x: 320,
-          y: 40,
-          fontSize: 12,
-          fontWeight: 600,
-          color: "#000000",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "sg-4",
-          type: "text",
-          content: "+41 44 000 0000",
-          x: 320,
-          y: 300,
-          fontSize: 12,
-          fontWeight: 400,
-          color: "#000000",
+          fontWeight: 500,
+          color: "#334155",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: 0,
@@ -929,25 +851,32 @@ export default function CardArchitectPro() {
     });
   };
 
-  const addElement = (type: ElementType) => {
+  const addElement = (type: ElementType, iconType?: IconType) => {
     const isShape = type === "box" || type === "circle";
+    const isIcon = type === "icon";
+
     const newEl: CardElement = {
       id: generateId(),
       type,
+      iconType: iconType,
       content:
-        type === "text" ? "Text" : type === "qr" ? "https://website.com" : "",
-      x: state.width / 2 - 50,
-      y: state.height / 2 - 20,
-      fontSize: 18,
+        type === "text"
+          ? "New Detail"
+          : type === "qr"
+          ? "https://website.com"
+          : "",
+      x: state.width / 2 - (isShape ? 50 : 0),
+      y: state.height / 2 - 10,
+      fontSize: 14,
       fontWeight: 500,
-      color: isShape ? "#3b82f6" : "#ffffff",
+      color: isShape || isIcon ? "#fbbf24" : "#ffffff",
       fontFamily: "Inter, sans-serif",
       opacity: 1,
       letterSpacing: 0,
       rotation: 0,
       zIndex: isShape ? 1 : 10,
-      width: isShape ? 100 : type === "qr" ? 80 : undefined,
-      height: isShape ? 100 : type === "qr" ? 80 : undefined,
+      width: isShape ? 100 : type === "qr" ? 80 : isIcon ? 20 : undefined,
+      height: isShape ? 100 : type === "qr" ? 80 : isIcon ? 20 : undefined,
       borderRadius: type === "box" ? 0 : undefined,
     };
 
@@ -987,7 +916,7 @@ export default function CardArchitectPro() {
     setTimeout(async () => {
       if (cardRef.current) {
         const dataUrl = await toPng(cardRef.current, { pixelRatio: 3 });
-        saveAs(dataUrl, "dikie-design.png");
+        saveAs(dataUrl, "executive-card.png");
         setState((prev) => ({
           ...prev,
           showGrid: prevGrid,
@@ -1056,7 +985,7 @@ export default function CardArchitectPro() {
               onClick={() => setActiveTab("templates")}
             />
           </Tooltip>
-          <Tooltip text="Tools">
+          <Tooltip text="Design Tools">
             <ToolBtn
               icon={Grid}
               active={activeTab === "tools"}
@@ -1073,13 +1002,42 @@ export default function CardArchitectPro() {
             <Tooltip text="Add Text">
               <ToolBtn icon={Type} onClick={() => addElement("text")} />
             </Tooltip>
+
+            {/* Icon Group */}
+            <div className="grid grid-cols-2 gap-2 p-1 bg-white/5 rounded-lg">
+              <button
+                onClick={() => addElement("icon", "phone")}
+                className="p-1 hover:bg-indigo-600 rounded flex justify-center"
+              >
+                <Phone size={14} />
+              </button>
+              <button
+                onClick={() => addElement("icon", "mail")}
+                className="p-1 hover:bg-indigo-600 rounded flex justify-center"
+              >
+                <Mail size={14} />
+              </button>
+              <button
+                onClick={() => addElement("icon", "globe")}
+                className="p-1 hover:bg-indigo-600 rounded flex justify-center"
+              >
+                <Globe size={14} />
+              </button>
+              <button
+                onClick={() => addElement("icon", "map-pin")}
+                className="p-1 hover:bg-indigo-600 rounded flex justify-center"
+              >
+                <MapPin size={14} />
+              </button>
+            </div>
+
             <Tooltip text="Add Rectangle">
               <ToolBtn icon={Square} onClick={() => addElement("box")} />
             </Tooltip>
             <Tooltip text="Add Circle">
               <ToolBtn icon={Circle} onClick={() => addElement("circle")} />
             </Tooltip>
-            <Tooltip text="Add Image">
+            <Tooltip text="Upload Logo">
               <ToolBtn
                 icon={ImageIcon}
                 onClick={() => document.getElementById("img-upload")?.click()}
@@ -1140,7 +1098,7 @@ export default function CardArchitectPro() {
         <div className="w-72 border-r border-white/10 bg-[#0c0c0e] flex flex-col z-10 animate-in slide-in-from-left-4 duration-200">
           <div className="p-4 border-b border-white/10">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Pick a Design
+              Professional Cards
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -1180,7 +1138,9 @@ export default function CardArchitectPro() {
             <h1 className="text-white font-bold text-sm tracking-wide">
               Card Editor
             </h1>
-            <p className="text-[10px] text-slate-500">Dikie's Design Studio</p>
+            <p className="text-[10px] text-slate-500">
+              Double-click elements to edit
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -1207,7 +1167,7 @@ export default function CardArchitectPro() {
               width: state.width,
               height: state.height,
               background: getBackgroundStyle(state.background),
-              borderRadius: "0px", // Business cards usually sharp, but can be rounded via CSS
+              borderRadius: "0px",
             }}
             onClick={() => setState({ ...state, selectedId: null })}
           >
@@ -1300,7 +1260,7 @@ export default function CardArchitectPro() {
                   <div className="grid grid-cols-2 gap-3">
                     <Slider
                       label="Size"
-                      min={10}
+                      min={8}
                       max={200}
                       value={selectedEl.fontSize}
                       onChange={(v: number) =>
@@ -1337,10 +1297,14 @@ export default function CardArchitectPro() {
               </section>
             )}
 
-            {(selectedEl.type === "box" || selectedEl.type === "circle") && (
+            {(selectedEl.type === "box" ||
+              selectedEl.type === "circle" ||
+              selectedEl.type === "icon") && (
               <section className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <Label>Shape Styles</Label>
+                  <Label>
+                    {selectedEl.type === "icon" ? "Icon Style" : "Shape Style"}
+                  </Label>
                   <Button
                     variant="danger"
                     icon={Trash2}
@@ -1351,7 +1315,7 @@ export default function CardArchitectPro() {
                   </Button>
                 </div>
                 <ColorInput
-                  label="Fill Color"
+                  label="Color"
                   value={selectedEl.color}
                   onChange={(v: string) =>
                     updateElement(selectedEl.id, { color: v })
@@ -1475,7 +1439,9 @@ export default function CardArchitectPro() {
                 <Button
                   className="flex-1"
                   icon={Copy}
-                  onClick={() => addElement(selectedEl.type)}
+                  onClick={() =>
+                    addElement(selectedEl.type, selectedEl.iconType)
+                  }
                 >
                   Clone
                 </Button>
@@ -1582,6 +1548,21 @@ export default function CardArchitectPro() {
 const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: any) => {
   const controls = useDragControls();
 
+  const renderIcon = (type: IconType | undefined, color: string) => {
+    switch (type) {
+      case "phone":
+        return <Phone size="100%" color={color} />;
+      case "mail":
+        return <Mail size="100%" color={color} />;
+      case "globe":
+        return <Globe size="100%" color={color} />;
+      case "map-pin":
+        return <MapPin size="100%" color={color} />;
+      default:
+        return <Briefcase size="100%" color={color} />;
+    }
+  };
+
   return (
     <motion.div
       drag
@@ -1615,7 +1596,7 @@ const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: any) => {
 
       {element.type === "text" && (
         <div
-          className="whitespace-nowrap px-2 py-1"
+          className="whitespace-pre-wrap px-2 py-1"
           style={{
             fontSize: `${element.fontSize}px`,
             fontWeight: element.fontWeight,
@@ -1638,6 +1619,12 @@ const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: any) => {
               element.type === "circle" ? "50%" : `${element.borderRadius}px`,
           }}
         />
+      )}
+
+      {element.type === "icon" && (
+        <div style={{ width: element.width, height: element.height }}>
+          {renderIcon(element.iconType, element.color)}
+        </div>
       )}
 
       {element.type === "image" && (

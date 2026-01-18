@@ -4,6 +4,7 @@ import { toPng } from "html-to-image";
 import {
   Briefcase,
   ChevronDown,
+  Circle,
   Copy,
   Download,
   Grid,
@@ -17,6 +18,7 @@ import {
   QrCode,
   Settings,
   Smartphone,
+  Square,
   Trash2,
   Type,
   Undo,
@@ -28,27 +30,28 @@ import { useDropzone } from "react-dropzone";
 // 1. TYPES & CONSTANTS
 // ==========================================
 
-type ElementType = "text" | "image" | "qr";
+type ElementType = "text" | "image" | "qr" | "box" | "circle";
 type BackgroundType = "solid" | "gradient" | "mesh";
 type GradientDirection = "br" | "r" | "b" | "tr" | "tl";
 
 interface CardElement {
   id: string;
   type: ElementType;
-  content: string;
+  content: string; // Text content or Image URL
   x: number;
   y: number;
-  width?: number; // For images/qr
+  width?: number;
   height?: number;
   // Style Props
   fontSize: number;
   fontWeight: number;
-  color: string;
+  color: string; // Text color OR Shape background color
   fontFamily: string;
   opacity: number;
   letterSpacing: number;
   rotation: number;
   zIndex: number;
+  borderRadius?: number;
 }
 
 interface BackgroundSettings {
@@ -77,8 +80,8 @@ interface Template {
   id: string;
   name: string;
   category: string;
-  thumbnail: string; // CSS color string for preview
-  state: Partial<CardState>; // Partial state to merge
+  thumbnail: string;
+  state: Partial<CardState>;
 }
 
 const FONTS = [
@@ -86,38 +89,184 @@ const FONTS = [
   { name: "Playfair Display", value: '"Playfair Display", serif' },
   { name: "Roboto Mono", value: '"Roboto Mono", monospace' },
   { name: "Oswald", value: '"Oswald", sans-serif' },
+  { name: "Dancing Script", value: "cursive" }, // Fallback for script
 ];
 
 const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
 
-// --- READY-MADE TEMPLATES LIBRARY ---
+// ==========================================
+// 2. PROFESSIONAL TEMPLATES
+// ==========================================
 
 const TEMPLATES: Template[] = [
   {
-    id: "tech-lead",
-    name: "Tech Lead",
-    category: "Professional",
-    thumbnail: "linear-gradient(to bottom right, #0f172a, #334155)",
+    id: "luxury-gold",
+    name: "Luxury Gold",
+    category: "Premium",
+    thumbnail: "linear-gradient(135deg, #000 0%, #333 100%)",
     state: {
       background: {
-        type: "gradient",
-        color1: "#0f172a",
-        color2: "#334155",
-        color3: "#1e293b",
+        type: "solid",
+        color1: "#09090b",
+        color2: "",
+        color3: "",
         direction: "br",
-        noise: 0.05,
+        noise: 0.1,
         blur: 0,
       },
       elements: [
+        // Gold Borders/Accents simulated with boxes
         {
-          id: "tl-1",
+          id: "lg-bg",
+          type: "box",
+          content: "",
+          x: 20,
+          y: 20,
+          width: 560,
+          height: 310,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "transparent",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 0,
+        }, // Border handled via CSS in real app, simulated here
+        {
+          id: "lg-1",
           type: "text",
           content: "DIKIE DEV",
-          x: 40,
-          y: 50,
+          x: 0,
+          y: 120,
+          width: 600,
+          height: 0,
+          fontSize: 42,
+          fontWeight: 400,
+          color: "#fbbf24",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "lg-2",
+          type: "text",
+          content: "EST. 2025",
+          x: 0,
+          y: 170,
+          width: 600,
+          height: 0,
+          fontSize: 12,
+          fontWeight: 400,
+          color: "#a1a1aa",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 6,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "lg-3",
+          type: "text",
+          content: "PRESIDENT & CEO",
+          x: 0,
+          y: 280,
+          width: 600,
+          height: 0,
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#fbbf24",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
+  {
+    id: "corporate-pro",
+    name: "Corporate Blue",
+    category: "Business",
+    thumbnail: "#fff",
+    state: {
+      background: {
+        type: "solid",
+        color1: "#ffffff",
+        color2: "",
+        color3: "",
+        direction: "br",
+        noise: 0,
+        blur: 0,
+      },
+      elements: [
+        // Blue Sidebar
+        {
+          id: "cp-shp1",
+          type: "box",
+          content: "",
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 350,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#1e3a8a",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 0,
+        },
+        // Accent Line
+        {
+          id: "cp-shp2",
+          type: "box",
+          content: "",
+          x: 200,
+          y: 40,
+          width: 400,
+          height: 4,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#3b82f6",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 2,
+          borderRadius: 0,
+        },
+
+        {
+          id: "cp-1",
+          type: "text",
+          content: "JD",
+          x: 60,
+          y: 140,
+          fontSize: 64,
+          fontWeight: 900,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 0.2,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cp-2",
+          type: "text",
+          content: "John Doe",
+          x: 230,
+          y: 80,
           fontSize: 32,
           fontWeight: 800,
-          color: "#ffffff",
+          color: "#0f172a",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: -1,
@@ -125,56 +274,240 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "tl-2",
+          id: "cp-3",
           type: "text",
-          content: "Senior Software Engineer",
-          x: 40,
-          y: 95,
+          content: "Solutions Architect",
+          x: 230,
+          y: 120,
           fontSize: 14,
-          fontWeight: 500,
-          color: "#94a3b8",
+          fontWeight: 600,
+          color: "#3b82f6",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: 1,
           rotation: 0,
           zIndex: 10,
         },
+
         {
-          id: "tl-3",
+          id: "cp-4",
           type: "text",
-          content: "dikie@example.com",
-          x: 40,
-          y: 230,
-          fontSize: 14,
-          fontWeight: 400,
-          color: "#ffffff",
+          content: "john@company.com",
+          x: 230,
+          y: 250,
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#64748b",
           fontFamily: "Inter, sans-serif",
-          opacity: 0.8,
+          opacity: 1,
           letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "tl-4",
+          id: "cp-5",
           type: "text",
-          content: "+1 (555) 000-0000",
-          x: 40,
-          y: 255,
-          fontSize: 14,
-          fontWeight: 400,
-          color: "#94a3b8",
+          content: "+1 555-0123",
+          x: 230,
+          y: 270,
+          fontSize: 12,
+          fontWeight: 500,
+          color: "#64748b",
           fontFamily: "Inter, sans-serif",
-          opacity: 0.8,
+          opacity: 1,
           letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
+
         {
-          id: "tl-5",
+          id: "cp-qr",
           type: "qr",
           content: "https://dikie.dev",
-          x: 450,
+          x: 65,
+          y: 240,
+          width: 70,
+          height: 70,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
+  {
+    id: "creative-studio",
+    name: "Bold Studio",
+    category: "Creative",
+    thumbnail: "#facc15",
+    state: {
+      background: {
+        type: "solid",
+        color1: "#facc15",
+        color2: "",
+        color3: "",
+        direction: "br",
+        noise: 0,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "cs-circle",
+          type: "circle",
+          content: "",
+          x: 300,
+          y: -50,
+          width: 400,
+          height: 400,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#000000",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+          borderRadius: 0,
+        },
+        {
+          id: "cs-1",
+          type: "text",
+          content: "WE ARE",
+          x: 40,
+          y: 80,
+          fontSize: 14,
+          fontWeight: 900,
+          color: "#000000",
+          fontFamily: '"Oswald", sans-serif',
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cs-2",
+          type: "text",
+          content: "OPEN",
+          x: 40,
+          y: 100,
+          fontSize: 80,
+          fontWeight: 900,
+          color: "#000000",
+          fontFamily: '"Oswald", sans-serif',
+          opacity: 1,
+          letterSpacing: -2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cs-3",
+          type: "text",
+          content: "dikie.dev",
+          x: 400,
+          y: 160,
+          fontSize: 24,
+          fontWeight: 700,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -1,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
+  {
+    id: "modern-tech",
+    name: "Tech Dark",
+    category: "Tech",
+    thumbnail: "#1e293b",
+    state: {
+      background: {
+        type: "gradient",
+        color1: "#0f172a",
+        color2: "#334155",
+        color3: "",
+        direction: "br",
+        noise: 0.05,
+        blur: 0,
+      },
+      elements: [
+        // Pill Shape
+        {
+          id: "mt-pill",
+          type: "box",
+          content: "",
+          x: 40,
+          y: 40,
+          width: 100,
+          height: 40,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#22d3ee",
+          fontFamily: "",
+          opacity: 0.2,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 5,
+          borderRadius: 20,
+        },
+        {
+          id: "mt-1",
+          type: "text",
+          content: "DEV",
+          x: 65,
           y: 50,
+          fontSize: 14,
+          fontWeight: 700,
+          color: "#22d3ee",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "mt-2",
+          type: "text",
+          content: "DIKIE",
+          x: 40,
+          y: 120,
+          fontSize: 48,
+          fontWeight: 800,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "mt-3",
+          type: "text",
+          content: "Engineering Lead",
+          x: 40,
+          y: 180,
+          fontSize: 16,
+          fontWeight: 500,
+          color: "#94a3b8",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "mt-qr",
+          type: "qr",
+          content: "vcard",
+          x: 450,
+          y: 40,
           width: 100,
           height: 100,
           fontSize: 0,
@@ -186,81 +519,101 @@ const TEMPLATES: Template[] = [
           rotation: 0,
           zIndex: 10,
         },
+        {
+          id: "mt-line",
+          type: "box",
+          content: "",
+          x: 40,
+          y: 280,
+          width: 520,
+          height: 1,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#334155",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 5,
+        },
       ],
     },
   },
   {
-    id: "swiss-minimal",
-    name: "Swiss Studio",
-    category: "Minimalist",
-    thumbnail: "#f1f5f9",
+    id: "salon-pastel",
+    name: "Salon Pastel",
+    category: "Beauty",
+    thumbnail: "#fdf2f8",
     state: {
       background: {
         type: "solid",
-        color1: "#f1f5f9",
-        color2: "#ffffff",
+        color1: "#fdf2f8",
+        color2: "",
         color3: "",
         direction: "br",
-        noise: 0,
+        noise: 0.02,
         blur: 0,
       },
       elements: [
         {
-          id: "sm-1",
-          type: "text",
-          content: "M.",
-          x: 40,
-          y: 30,
-          fontSize: 120,
-          fontWeight: 900,
-          color: "#0f172a",
-          fontFamily: "Inter, sans-serif",
+          id: "sp-circle",
+          type: "circle",
+          content: "",
+          x: 220,
+          y: 20,
+          width: 160,
+          height: 160,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#fce7f3",
+          fontFamily: "",
           opacity: 1,
-          letterSpacing: -8,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 1,
+          borderRadius: 0,
         },
         {
-          id: "sm-2",
+          id: "sp-1",
           type: "text",
-          content: "Morgan Creative",
-          x: 300,
+          content: "Bella",
+          x: 250,
           y: 60,
-          fontSize: 24,
-          fontWeight: 700,
-          color: "#0f172a",
-          fontFamily: "Inter, sans-serif",
+          fontSize: 42,
+          fontWeight: 400,
+          color: "#db2777",
+          fontFamily: '"Playfair Display", serif',
           opacity: 1,
-          letterSpacing: -1,
-          rotation: 0,
+          letterSpacing: 0,
+          rotation: -5,
           zIndex: 10,
         },
         {
-          id: "sm-3",
+          id: "sp-2",
           type: "text",
-          content: "Art Direction & Design",
-          x: 300,
-          y: 95,
+          content: "Beauty & Spa",
+          x: 235,
+          y: 110,
           fontSize: 12,
-          fontWeight: 500,
-          color: "#64748b",
+          fontWeight: 600,
+          color: "#9d174d",
           fontFamily: "Inter, sans-serif",
-          opacity: 1,
+          opacity: 0.8,
           letterSpacing: 2,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "sm-4",
-          type: "qr",
-          content: "portfolio",
-          x: 480,
-          y: 230,
-          width: 80,
-          height: 80,
+          id: "sp-3",
+          type: "box",
+          content: "",
+          x: 200,
+          y: 200,
+          width: 200,
+          height: 1,
           fontSize: 0,
           fontWeight: 0,
-          color: "",
+          color: "#fbcfe8",
           fontFamily: "",
           opacity: 1,
           letterSpacing: 0,
@@ -268,96 +621,17 @@ const TEMPLATES: Template[] = [
           zIndex: 5,
         },
         {
-          id: "sm-5",
+          id: "sp-4",
           type: "text",
-          content: "EST. 2024",
-          x: 40,
-          y: 280,
-          fontSize: 10,
-          fontWeight: 700,
-          color: "#94a3b8",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 4,
-          rotation: 0,
-          zIndex: 10,
-        },
-      ],
-    },
-  },
-  {
-    id: "cyber-neon",
-    name: "Cyberpunk",
-    category: "Creative",
-    thumbnail: "linear-gradient(to right, #2e0228, #180326)",
-    state: {
-      background: {
-        type: "gradient",
-        color1: "#2e0228",
-        color2: "#180326",
-        color3: "",
-        direction: "br",
-        noise: 0.3,
-        blur: 0,
-      },
-      elements: [
-        {
-          id: "cn-1",
-          type: "text",
-          content: "NEO_SYSTEMS",
-          x: 30,
-          y: 120,
-          fontSize: 42,
-          fontWeight: 700,
-          color: "#d946ef",
-          fontFamily: '"Oswald", sans-serif',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cn-2",
-          type: "text",
-          content: "SYSTEM_ADMIN // ROOT",
-          x: 30,
-          y: 175,
-          fontSize: 14,
-          fontWeight: 400,
-          color: "#22d3ee",
-          fontFamily: '"Roboto Mono", monospace',
-          opacity: 1,
-          letterSpacing: 1,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cn-3",
-          type: "text",
-          content: "ID: 994-22-X",
-          x: 450,
-          y: 280,
+          content: "123 Fashion Ave, NY",
+          x: 200,
+          y: 220,
           fontSize: 12,
           fontWeight: 400,
-          color: "#e879f9",
-          fontFamily: '"Roboto Mono", monospace',
-          opacity: 0.6,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cn-4",
-          type: "text",
-          content: "ACCESS GRANTED",
-          x: 430,
-          y: 40,
-          fontSize: 10,
-          fontWeight: 700,
-          color: "#22d3ee",
-          fontFamily: '"Roboto Mono", monospace',
+          color: "#831843",
+          fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: 2,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
@@ -365,204 +639,65 @@ const TEMPLATES: Template[] = [
     },
   },
   {
-    id: "elegant-serif",
-    name: "Executive Gold",
-    category: "Luxury",
-    thumbnail: "#1a1a1a",
+    id: "swiss-grid",
+    name: "Swiss Grid",
+    category: "Minimal",
+    thumbnail: "#f3f4f6",
     state: {
       background: {
         type: "solid",
-        color1: "#0a0a0a",
-        color2: "#000000",
-        color3: "",
-        direction: "br",
-        noise: 0.05,
-        blur: 0,
-      },
-      elements: [
-        {
-          id: "es-1",
-          type: "text",
-          content: "Alexander",
-          x: 260,
-          y: 100,
-          fontSize: 48,
-          fontWeight: 400,
-          color: "#fbbf24",
-          fontFamily: '"Playfair Display", serif',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "es-2",
-          type: "text",
-          content: "Hamilton",
-          x: 300,
-          y: 150,
-          fontSize: 48,
-          fontWeight: 400,
-          color: "#fbbf24",
-          fontFamily: '"Playfair Display", serif',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "es-3",
-          type: "text",
-          content: "CEO & Founder",
-          x: 40,
-          y: 280,
-          fontSize: 12,
-          fontWeight: 400,
-          color: "#a3a3a3",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 2,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "es-4",
-          type: "text",
-          content: "Hamilton Corp.",
-          x: 450,
-          y: 280,
-          fontSize: 12,
-          fontWeight: 700,
-          color: "#fbbf24",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: 1,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "es-5",
-          type: "text",
-          content: "H",
-          x: 40,
-          y: 30,
-          fontSize: 80,
-          fontWeight: 400,
-          color: "#262626",
-          fontFamily: '"Playfair Display", serif',
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 1,
-        },
-      ],
-    },
-  },
-  {
-    id: "gradient-blur",
-    name: "Aura Mesh",
-    category: "Creative",
-    thumbnail:
-      "radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%)",
-    state: {
-      background: {
-        type: "mesh",
-        color1: "#000000",
-        color2: "#000000",
-        color3: "",
-        direction: "br",
-        noise: 0.1,
-        blur: 40,
-      },
-      elements: [
-        {
-          id: "gb-1",
-          type: "text",
-          content: "creative",
-          x: 40,
-          y: 40,
-          fontSize: 14,
-          fontWeight: 600,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 0.5,
-          letterSpacing: 2,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "gb-2",
-          type: "text",
-          content: "Studio",
-          x: 40,
-          y: 180,
-          fontSize: 64,
-          fontWeight: 300,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 1,
-          letterSpacing: -3,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "gb-3",
-          type: "text",
-          content: "Design",
-          x: 40,
-          y: 240,
-          fontSize: 64,
-          fontWeight: 300,
-          color: "#e879f9",
-          fontFamily: '"Playfair Display", serif',
-          opacity: 1,
-          letterSpacing: -3,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "gb-4",
-          type: "text",
-          content: "Tokyo • NY • London",
-          x: 420,
-          y: 40,
-          fontSize: 10,
-          fontWeight: 600,
-          color: "#ffffff",
-          fontFamily: "Inter, sans-serif",
-          opacity: 0.6,
-          letterSpacing: 1,
-          rotation: 0,
-          zIndex: 10,
-        },
-      ],
-    },
-  },
-  {
-    id: "corporate-blue",
-    name: "Trust Blue",
-    category: "Professional",
-    thumbnail: "#eff6ff",
-    state: {
-      background: {
-        type: "solid",
-        color1: "#eff6ff",
-        color2: "#ffffff",
+        color1: "#f3f4f6",
+        color2: "",
         color3: "",
         direction: "br",
         noise: 0,
         blur: 0,
       },
       elements: [
+        // The Grid Layout
         {
-          id: "cb-1",
+          id: "sg-h",
+          type: "box",
+          content: "",
+          x: 0,
+          y: 175,
+          width: 600,
+          height: 2,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#e5e7eb",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+        },
+        {
+          id: "sg-v",
+          type: "box",
+          content: "",
+          x: 300,
+          y: 0,
+          width: 2,
+          height: 350,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "#e5e7eb",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+        },
+        {
+          id: "sg-1",
           type: "text",
-          content: "John Doe",
-          x: 220,
-          y: 120,
-          fontSize: 28,
+          content: "Helvetica",
+          x: 20,
+          y: 130,
+          fontSize: 24,
           fontWeight: 700,
-          color: "#1e3a8a",
+          color: "#000000",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: -1,
@@ -570,14 +705,14 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "cb-2",
+          id: "sg-2",
           type: "text",
-          content: "Cloud Architect",
-          x: 220,
+          content: "International",
+          x: 20,
           y: 160,
-          fontSize: 14,
-          fontWeight: 500,
-          color: "#3b82f6",
+          fontSize: 12,
+          fontWeight: 400,
+          color: "#6b7280",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
           letterSpacing: 0,
@@ -585,34 +720,32 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "cb-3",
-          type: "qr",
-          content: "contact",
-          x: 60,
-          y: 100,
-          width: 120,
-          height: 120,
-          fontSize: 0,
-          fontWeight: 0,
-          color: "",
-          fontFamily: "",
-          opacity: 1,
-          letterSpacing: 0,
-          rotation: 0,
-          zIndex: 10,
-        },
-        {
-          id: "cb-4",
+          id: "sg-3",
           type: "text",
-          content: "Solutions Inc.",
-          x: 450,
-          y: 300,
-          fontSize: 14,
-          fontWeight: 700,
-          color: "#93c5fd",
+          content: "Zurich",
+          x: 320,
+          y: 40,
+          fontSize: 12,
+          fontWeight: 600,
+          color: "#000000",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "sg-4",
+          type: "text",
+          content: "+41 44 000 0000",
+          x: 320,
+          y: 300,
+          fontSize: 12,
+          fontWeight: 400,
+          color: "#000000",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0,
           rotation: 0,
           zIndex: 10,
         },
@@ -629,18 +762,11 @@ const INITIAL_STATE: CardState = {
   showGrid: true,
   history: [],
   historyIndex: -1,
-  selectedId: "tl-1",
+  selectedId: null,
 };
 
 // ==========================================
-// 2. UTILS & HELPERS
-// ==========================================
-
-const getQRCodePath = () =>
-  "M4 4h6v6H4V4zm2 2v2h2V6H6zm-2 8h6v6H4v-6zm2 2v2h2v-2H6zm8-10h6v6h-6V4zm2 2v2h2V6h-2zM4 20h2v-2H4v2zm2-2h2v-2H6v2zm4 2h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm2-2h2v-2h-2v2zm-2 2h2v-2h-2v2zm10 8h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm-4 6h2v-2h-2v2zm2 2h2v-2h-2v2z";
-
-// ==========================================
-// 3. UI LIBRARY (Custom, Type Safe)
+// 3. UI COMPONENTS
 // ==========================================
 
 const Label = ({ children }: { children: React.ReactNode }) => (
@@ -649,15 +775,7 @@ const Label = ({ children }: { children: React.ReactNode }) => (
   </label>
 );
 
-interface SliderProps {
-  value: number;
-  min: number;
-  max: number;
-  onChange: (val: number) => void;
-  label?: string;
-}
-
-const Slider = ({ value, min, max, onChange, label }: SliderProps) => (
+const Slider = ({ value, min, max, onChange, label }: any) => (
   <div className="mb-4">
     <div className="flex justify-between items-center mb-1">
       {label && <Label>{label}</Label>}
@@ -674,13 +792,7 @@ const Slider = ({ value, min, max, onChange, label }: SliderProps) => (
   </div>
 );
 
-interface ColorInputProps {
-  value: string;
-  onChange: (val: string) => void;
-  label?: string;
-}
-
-const ColorInput = ({ value, onChange, label }: ColorInputProps) => (
+const ColorInput = ({ value, onChange, label }: any) => (
   <div className="mb-4">
     {label && <Label>{label}</Label>}
     <div className="flex items-center gap-2">
@@ -704,14 +816,7 @@ const ColorInput = ({ value, onChange, label }: ColorInputProps) => (
   </div>
 );
 
-interface SelectProps {
-  value: string;
-  onChange: (val: string) => void;
-  options: { name: string; value: string }[];
-  label?: string;
-}
-
-const Select = ({ value, onChange, options, label }: SelectProps) => (
+const Select = ({ value, onChange, options, label }: any) => (
   <div className="mb-4">
     {label && <Label>{label}</Label>}
     <div className="relative">
@@ -720,7 +825,7 @@ const Select = ({ value, onChange, options, label }: SelectProps) => (
         onChange={(e) => onChange(e.target.value)}
         className="w-full bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs text-white appearance-none focus:border-indigo-500 outline-none"
       >
-        {options.map((opt) => (
+        {options.map((opt: any) => (
           <option key={opt.value} value={opt.value}>
             {opt.name}
           </option>
@@ -734,16 +839,6 @@ const Select = ({ value, onChange, options, label }: SelectProps) => (
   </div>
 );
 
-interface ButtonProps {
-  onClick: () => void;
-  children: React.ReactNode;
-  active?: boolean;
-  variant?: "primary" | "secondary" | "danger" | "ghost";
-  icon?: React.ElementType;
-  className?: string;
-  disabled?: boolean;
-}
-
 const Button = ({
   onClick,
   children,
@@ -752,10 +847,10 @@ const Button = ({
   icon: Icon,
   className,
   disabled,
-}: ButtonProps) => {
+}: any) => {
   const baseStyle =
     "flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
-  const variants = {
+  const variants: any = {
     primary:
       "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20",
     secondary: active
@@ -782,17 +877,14 @@ const Button = ({
 // ==========================================
 
 export default function CardArchitectPro() {
-  // --- State ---
   const [state, setState] = useState<CardState>(INITIAL_STATE);
   const [activeTab, setActiveTab] = useState<"tools" | "templates">(
     "templates"
-  ); // Default to templates
+  );
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // --- History Management ---
   const pushHistory = useCallback(
     (newState: CardState) => {
-      // We only save specific parts of state to history to save memory
       const { elements, background, width, height } = newState;
       const historyEntry = {
         elements,
@@ -803,15 +895,12 @@ export default function CardArchitectPro() {
         showGrid: newState.showGrid,
         selectedId: newState.selectedId,
       };
-
       const prevHistory = state.history.slice(0, state.historyIndex + 1);
 
       setState((prev) => ({
         ...prev,
         elements: newState.elements,
         background: newState.background,
-        width: newState.width,
-        height: newState.height,
         history: [...prevHistory, historyEntry],
         historyIndex: prevHistory.length,
       }));
@@ -831,7 +920,6 @@ export default function CardArchitectPro() {
   };
 
   const applyTemplate = (template: Template) => {
-    // When applying a template, we reset history to avoid weird undo states between completely different designs
     setState({
       ...state,
       ...template.state,
@@ -841,30 +929,26 @@ export default function CardArchitectPro() {
     });
   };
 
-  // --- Actions ---
-
   const addElement = (type: ElementType) => {
+    const isShape = type === "box" || type === "circle";
     const newEl: CardElement = {
       id: generateId(),
       type,
       content:
-        type === "text"
-          ? "New Text"
-          : type === "qr"
-          ? "https://website.com"
-          : "https://via.placeholder.com/100",
+        type === "text" ? "Text" : type === "qr" ? "https://website.com" : "",
       x: state.width / 2 - 50,
       y: state.height / 2 - 20,
       fontSize: 18,
       fontWeight: 500,
-      color: "#ffffff",
+      color: isShape ? "#3b82f6" : "#ffffff",
       fontFamily: "Inter, sans-serif",
       opacity: 1,
       letterSpacing: 0,
       rotation: 0,
-      zIndex: state.elements.length + 1,
-      width: type !== "text" ? 80 : undefined,
-      height: type !== "text" ? 80 : undefined,
+      zIndex: isShape ? 1 : 10,
+      width: isShape ? 100 : type === "qr" ? 80 : undefined,
+      height: isShape ? 100 : type === "qr" ? 80 : undefined,
+      borderRadius: type === "box" ? 0 : undefined,
     };
 
     setState((prev) => ({
@@ -895,19 +979,15 @@ export default function CardArchitectPro() {
 
   const handleDownload = useCallback(async () => {
     if (cardRef.current === null) return;
-
-    // Temporarily hide grid/selection handles via CSS class or logic if needed
     const prevGrid = state.showGrid;
     const prevSelected = state.selectedId;
 
     setState((prev) => ({ ...prev, showGrid: false, selectedId: null }));
 
-    // Allow React render cycle to flush
     setTimeout(async () => {
       if (cardRef.current) {
         const dataUrl = await toPng(cardRef.current, { pixelRatio: 3 });
-        saveAs(dataUrl, "card-architect-pro.png");
-        // Restore
+        saveAs(dataUrl, "dikie-design.png");
         setState((prev) => ({
           ...prev,
           showGrid: prevGrid,
@@ -936,7 +1016,7 @@ export default function CardArchitectPro() {
             opacity: 1,
             letterSpacing: 0,
             rotation: 0,
-            zIndex: state.elements.length + 1,
+            zIndex: 5,
             width: 100,
             height: 100,
           };
@@ -949,7 +1029,7 @@ export default function CardArchitectPro() {
         reader.readAsDataURL(file);
       }
     },
-    [state.width, state.height, state.elements.length]
+    [state.width, state.height]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -960,19 +1040,14 @@ export default function CardArchitectPro() {
 
   const selectedEl = state.elements.find((el) => el.id === state.selectedId);
 
-  // ==========================================
-  // 5. RENDER
-  // ==========================================
-
   return (
     <div className="flex h-screen w-screen bg-[#09090b] text-slate-300 font-sans overflow-hidden">
-      {/* --- LEFT SIDEBAR: NAVIGATION & TOOLS --- */}
+      {/* --- LEFT SIDEBAR --- */}
       <div className="w-16 border-r border-white/10 flex flex-col items-center py-6 gap-4 bg-[#0c0c0e] z-20">
         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 mb-2">
           <LayoutTemplate className="text-white" size={20} />
         </div>
 
-        {/* Navigation Tabs */}
         <div className="flex flex-col gap-2 w-full px-2">
           <Tooltip text="Templates">
             <ToolBtn
@@ -981,7 +1056,7 @@ export default function CardArchitectPro() {
               onClick={() => setActiveTab("templates")}
             />
           </Tooltip>
-          <Tooltip text="Editor Tools">
+          <Tooltip text="Tools">
             <ToolBtn
               icon={Grid}
               active={activeTab === "tools"}
@@ -992,13 +1067,19 @@ export default function CardArchitectPro() {
 
         <div className="h-px w-8 bg-white/10 my-2" />
 
-        {/* Context Tools (Only show when Editor is active) */}
+        {/* Tools Tab */}
         {activeTab === "tools" && (
           <div className="flex flex-col gap-4 w-full px-2 animate-in fade-in duration-300">
             <Tooltip text="Add Text">
               <ToolBtn icon={Type} onClick={() => addElement("text")} />
             </Tooltip>
-            <Tooltip text="Upload Image">
+            <Tooltip text="Add Rectangle">
+              <ToolBtn icon={Square} onClick={() => addElement("box")} />
+            </Tooltip>
+            <Tooltip text="Add Circle">
+              <ToolBtn icon={Circle} onClick={() => addElement("circle")} />
+            </Tooltip>
+            <Tooltip text="Add Image">
               <ToolBtn
                 icon={ImageIcon}
                 onClick={() => document.getElementById("img-upload")?.click()}
@@ -1054,12 +1135,12 @@ export default function CardArchitectPro() {
         )}
       </div>
 
-      {/* --- SECONDARY SIDEBAR (TEMPLATES) --- */}
+      {/* --- TEMPLATES SIDEBAR --- */}
       {activeTab === "templates" && (
         <div className="w-72 border-r border-white/10 bg-[#0c0c0e] flex flex-col z-10 animate-in slide-in-from-left-4 duration-200">
           <div className="p-4 border-b border-white/10">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Pick a Template
+              Pick a Design
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -1089,18 +1170,17 @@ export default function CardArchitectPro() {
         </div>
       )}
 
-      {/* --- CENTER: CANVAS --- */}
+      {/* --- CANVAS --- */}
       <div
         className="flex-1 flex flex-col relative bg-[#18181b]"
         {...getRootProps()}
       >
-        {/* Top Bar */}
         <div className="h-16 border-b border-white/10 bg-[#0c0c0e] flex items-center justify-between px-6 z-10">
           <div>
             <h1 className="text-white font-bold text-sm tracking-wide">
-              Untitled Card
+              Card Editor
             </h1>
-            <p className="text-[10px] text-slate-500">Auto-saving enabled</p>
+            <p className="text-[10px] text-slate-500">Dikie's Design Studio</p>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -1111,25 +1191,14 @@ export default function CardArchitectPro() {
             >
               Grid
             </Button>
-            <Button variant="ghost" icon={Smartphone} onClick={() => {}}>
-              Preview
-            </Button>
             <Button variant="primary" icon={Download} onClick={handleDownload}>
               Export PNG
             </Button>
           </div>
         </div>
 
-        {/* Canvas Area */}
         <div className="flex-1 overflow-auto flex items-center justify-center p-20 relative bg-[radial-gradient(#ffffff05_1px,transparent_1px)] [background-size:16px_16px]">
           <input {...getInputProps()} />
-          {isDragActive && (
-            <div className="absolute inset-0 z-50 bg-indigo-500/20 backdrop-blur-sm flex items-center justify-center border-4 border-indigo-500 border-dashed m-4 rounded-xl">
-              <div className="text-white font-bold text-xl">
-                Drop Image Here
-              </div>
-            </div>
-          )}
 
           <div
             ref={cardRef}
@@ -1138,11 +1207,10 @@ export default function CardArchitectPro() {
               width: state.width,
               height: state.height,
               background: getBackgroundStyle(state.background),
-              borderRadius: "24px",
+              borderRadius: "0px", // Business cards usually sharp, but can be rounded via CSS
             }}
             onClick={() => setState({ ...state, selectedId: null })}
           >
-            {/* Grid Overlay */}
             {state.showGrid && (
               <div
                 className="absolute inset-0 pointer-events-none opacity-20"
@@ -1153,7 +1221,6 @@ export default function CardArchitectPro() {
               />
             )}
 
-            {/* Noise Overlay */}
             <div
               className="absolute inset-0 pointer-events-none opacity-[0.05]"
               style={{
@@ -1162,7 +1229,6 @@ export default function CardArchitectPro() {
               }}
             />
 
-            {/* Elements */}
             <AnimatePresence>
               {state.elements.map((el) => (
                 <DraggableElement
@@ -1180,7 +1246,6 @@ export default function CardArchitectPro() {
           </div>
         </div>
 
-        {/* Zoom Controls */}
         <div className="absolute bottom-6 left-6 flex items-center gap-2 bg-[#0c0c0e] p-2 rounded-lg border border-white/10 shadow-xl">
           <button className="p-1 hover:bg-white/10 rounded">
             <Minus size={14} />
@@ -1192,9 +1257,8 @@ export default function CardArchitectPro() {
         </div>
       </div>
 
-      {/* --- RIGHT SIDEBAR: PROPERTIES --- */}
+      {/* --- PROPERTIES SIDEBAR --- */}
       <div className="w-80 bg-[#0c0c0e] border-l border-white/10 flex flex-col z-20 overflow-y-auto custom-scrollbar">
-        {/* Layer Header */}
         <div className="p-4 border-b border-white/10">
           <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-2">
             <Settings size={14} /> Properties
@@ -1203,20 +1267,17 @@ export default function CardArchitectPro() {
 
         {selectedEl ? (
           <div className="p-6 space-y-8 animate-in slide-in-from-right-4 duration-200">
-            {/* Element Specific Controls */}
-
-            {/* TEXT CONTROLS */}
             {selectedEl.type === "text" && (
               <section className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
-                  <Label>Text Content</Label>
+                  <Label>Content</Label>
                   <Button
                     variant="danger"
                     icon={Trash2}
                     onClick={() => deleteElement(selectedEl.id)}
                     className="px-2 py-1 h-6"
                   >
-                    Remove
+                    Delete
                   </Button>
                 </div>
                 <textarea
@@ -1227,13 +1288,12 @@ export default function CardArchitectPro() {
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-sm text-white focus:ring-2 focus:ring-indigo-500 outline-none resize-none"
                   rows={3}
                 />
-
                 <div className="space-y-4 pt-4 border-t border-white/5">
                   <Select
-                    label="Typography"
+                    label="Font"
                     options={FONTS}
                     value={selectedEl.fontFamily}
-                    onChange={(v) =>
+                    onChange={(v: string) =>
                       updateElement(selectedEl.id, { fontFamily: v })
                     }
                   />
@@ -1243,7 +1303,7 @@ export default function CardArchitectPro() {
                       min={10}
                       max={200}
                       value={selectedEl.fontSize}
-                      onChange={(v) =>
+                      onChange={(v: number) =>
                         updateElement(selectedEl.id, { fontSize: v })
                       }
                     />
@@ -1252,7 +1312,7 @@ export default function CardArchitectPro() {
                       min={100}
                       max={900}
                       value={selectedEl.fontWeight}
-                      onChange={(v) =>
+                      onChange={(v: number) =>
                         updateElement(selectedEl.id, { fontWeight: v })
                       }
                     />
@@ -1260,22 +1320,77 @@ export default function CardArchitectPro() {
                   <Slider
                     label="Letter Spacing"
                     min={-5}
-                    max={10}
+                    max={20}
                     value={selectedEl.letterSpacing}
-                    onChange={(v) =>
+                    onChange={(v: number) =>
                       updateElement(selectedEl.id, { letterSpacing: v })
                     }
                   />
                   <ColorInput
-                    label="Color"
+                    label="Text Color"
                     value={selectedEl.color}
-                    onChange={(v) => updateElement(selectedEl.id, { color: v })}
+                    onChange={(v: string) =>
+                      updateElement(selectedEl.id, { color: v })
+                    }
                   />
                 </div>
               </section>
             )}
 
-            {/* IMAGE/QR CONTROLS */}
+            {(selectedEl.type === "box" || selectedEl.type === "circle") && (
+              <section className="space-y-4">
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Shape Styles</Label>
+                  <Button
+                    variant="danger"
+                    icon={Trash2}
+                    onClick={() => deleteElement(selectedEl.id)}
+                    className="px-2 py-1 h-6"
+                  >
+                    Delete
+                  </Button>
+                </div>
+                <ColorInput
+                  label="Fill Color"
+                  value={selectedEl.color}
+                  onChange={(v: string) =>
+                    updateElement(selectedEl.id, { color: v })
+                  }
+                />
+                <div className="grid grid-cols-2 gap-3">
+                  <Slider
+                    label="Width"
+                    min={10}
+                    max={600}
+                    value={selectedEl.width}
+                    onChange={(v: number) =>
+                      updateElement(selectedEl.id, { width: v })
+                    }
+                  />
+                  <Slider
+                    label="Height"
+                    min={10}
+                    max={600}
+                    value={selectedEl.height}
+                    onChange={(v: number) =>
+                      updateElement(selectedEl.id, { height: v })
+                    }
+                  />
+                </div>
+                {selectedEl.type === "box" && (
+                  <Slider
+                    label="Roundness"
+                    min={0}
+                    max={100}
+                    value={selectedEl.borderRadius}
+                    onChange={(v: number) =>
+                      updateElement(selectedEl.id, { borderRadius: v })
+                    }
+                  />
+                )}
+              </section>
+            )}
+
             {(selectedEl.type === "image" || selectedEl.type === "qr") && (
               <section className="space-y-4">
                 <div className="flex justify-between items-center mb-2">
@@ -1286,7 +1401,7 @@ export default function CardArchitectPro() {
                     onClick={() => deleteElement(selectedEl.id)}
                     className="px-2 py-1 h-6"
                   >
-                    Remove
+                    Delete
                   </Button>
                 </div>
                 {selectedEl.type === "qr" && (
@@ -1296,7 +1411,6 @@ export default function CardArchitectPro() {
                     onChange={(e) =>
                       updateElement(selectedEl.id, { content: e.target.value })
                     }
-                    placeholder="https://..."
                     className="w-full bg-slate-800 border-slate-700 rounded px-3 py-2 text-xs mb-4 text-white"
                   />
                 )}
@@ -1305,15 +1419,17 @@ export default function CardArchitectPro() {
                     label="Width"
                     min={20}
                     max={300}
-                    value={selectedEl.width || 100}
-                    onChange={(v) => updateElement(selectedEl.id, { width: v })}
+                    value={selectedEl.width}
+                    onChange={(v: number) =>
+                      updateElement(selectedEl.id, { width: v })
+                    }
                   />
                   <Slider
                     label="Height"
                     min={20}
                     max={300}
-                    value={selectedEl.height || 100}
-                    onChange={(v) =>
+                    value={selectedEl.height}
+                    onChange={(v: number) =>
                       updateElement(selectedEl.id, { height: v })
                     }
                   />
@@ -1321,23 +1437,24 @@ export default function CardArchitectPro() {
               </section>
             )}
 
-            {/* COMMON CONTROLS */}
             <section className="space-y-4 pt-4 border-t border-white/5">
-              <Label>Transform</Label>
+              <Label>Transform & Layer</Label>
               <div className="grid grid-cols-2 gap-3">
                 <Slider
                   label="Opacity"
                   min={0}
                   max={1}
                   value={selectedEl.opacity}
-                  onChange={(v) => updateElement(selectedEl.id, { opacity: v })}
+                  onChange={(v: number) =>
+                    updateElement(selectedEl.id, { opacity: v })
+                  }
                 />
                 <Slider
                   label="Rotate"
                   min={-180}
                   max={180}
                   value={selectedEl.rotation}
-                  onChange={(v) =>
+                  onChange={(v: number) =>
                     updateElement(selectedEl.id, { rotation: v })
                   }
                 />
@@ -1348,7 +1465,7 @@ export default function CardArchitectPro() {
                   icon={Move}
                   onClick={() =>
                     updateElement(selectedEl.id, {
-                      x: state.width / 2 - 50,
+                      x: state.width / 2 - (selectedEl.width || 0) / 2,
                       y: state.height / 2 - 20,
                     })
                   }
@@ -1360,20 +1477,40 @@ export default function CardArchitectPro() {
                   icon={Copy}
                   onClick={() => addElement(selectedEl.type)}
                 >
-                  Duplicate
+                  Clone
+                </Button>
+              </div>
+              <div className="flex gap-2 mt-2">
+                <Button
+                  className="flex-1"
+                  onClick={() =>
+                    updateElement(selectedEl.id, {
+                      zIndex: selectedEl.zIndex + 1,
+                    })
+                  }
+                >
+                  Bring Fwd
+                </Button>
+                <Button
+                  className="flex-1"
+                  onClick={() =>
+                    updateElement(selectedEl.id, {
+                      zIndex: Math.max(0, selectedEl.zIndex - 1),
+                    })
+                  }
+                >
+                  Send Back
                 </Button>
               </div>
             </section>
           </div>
         ) : (
           <div className="p-6 space-y-8">
-            {/* Background Settings */}
             <section>
               <div className="flex items-center gap-2 mb-4 text-slate-400">
                 <Palette size={16} />
                 <span className="text-xs font-bold uppercase">Background</span>
               </div>
-
               <div className="flex bg-slate-800 p-1 rounded-lg mb-6">
                 {["solid", "gradient", "mesh"].map((t) => (
                   <button
@@ -1389,25 +1526,26 @@ export default function CardArchitectPro() {
                   </button>
                 ))}
               </div>
-
               {state.background.type !== "mesh" && (
                 <>
                   <ColorInput
                     label="Primary Color"
                     value={state.background.color1}
-                    onChange={(v) => updateBackground({ color1: v })}
+                    onChange={(v: string) => updateBackground({ color1: v })}
                   />
                   {state.background.type === "gradient" && (
                     <>
                       <ColorInput
                         label="Secondary Color"
                         value={state.background.color2}
-                        onChange={(v) => updateBackground({ color2: v })}
+                        onChange={(v: string) =>
+                          updateBackground({ color2: v })
+                        }
                       />
                       <Select
                         label="Direction"
                         value={state.background.direction}
-                        onChange={(v) =>
+                        onChange={(v: string) =>
                           updateBackground({ direction: v as any })
                         }
                         options={[
@@ -1420,37 +1558,14 @@ export default function CardArchitectPro() {
                   )}
                 </>
               )}
-
               <div className="pt-4 border-t border-white/5 space-y-4">
                 <Slider
-                  label="Noise Grain"
+                  label="Noise"
                   min={0}
                   max={0.5}
                   value={state.background.noise}
-                  onChange={(v) => updateBackground({ noise: v })}
+                  onChange={(v: number) => updateBackground({ noise: v })}
                 />
-                <Slider
-                  label="Blur Effect"
-                  min={0}
-                  max={50}
-                  value={state.background.blur}
-                  onChange={(v) => updateBackground({ blur: v })}
-                />
-              </div>
-            </section>
-
-            {/* Layout Settings */}
-            <section className="pt-4 border-t border-white/5">
-              <Label>Card Dimensions</Label>
-              <div className="grid grid-cols-2 gap-3 mt-2">
-                <div className="bg-slate-800 p-2 rounded text-center">
-                  <div className="text-[10px] text-slate-500">W</div>
-                  <div className="text-sm font-mono">{state.width}px</div>
-                </div>
-                <div className="bg-slate-800 p-2 rounded text-center">
-                  <div className="text-[10px] text-slate-500">H</div>
-                  <div className="text-sm font-mono">{state.height}px</div>
-                </div>
               </div>
             </section>
           </div>
@@ -1461,20 +1576,10 @@ export default function CardArchitectPro() {
 }
 
 // ==========================================
-// 6. HELPER COMPONENTS
+// 5. RENDER HELPERS
 // ==========================================
 
-const DraggableElement = ({
-  element,
-  isSelected,
-  onSelect,
-  onUpdate,
-}: {
-  element: CardElement;
-  isSelected: boolean;
-  onSelect: (e: any) => void;
-  onUpdate: (u: any) => void;
-}) => {
+const DraggableElement = ({ element, isSelected, onSelect, onUpdate }: any) => {
   const controls = useDragControls();
 
   return (
@@ -1482,12 +1587,9 @@ const DraggableElement = ({
       drag
       dragMomentum={false}
       dragControls={controls}
-      onDragEnd={(_, info) => {
-        onUpdate({
-          x: element.x + info.offset.x,
-          y: element.y + info.offset.y,
-        });
-      }}
+      onDragEnd={(_, info) =>
+        onUpdate({ x: element.x + info.offset.x, y: element.y + info.offset.y })
+      }
       initial={{ x: element.x, y: element.y, opacity: 0, scale: 0.8 }}
       animate={{
         x: element.x,
@@ -1503,13 +1605,7 @@ const DraggableElement = ({
           ? "ring-1 ring-indigo-500"
           : "hover:ring-1 hover:ring-white/30"
       }`}
-      style={
-        {
-          // Position is handled by motion animate
-        }
-      }
     >
-      {/* Selection Handles */}
       {isSelected && (
         <>
           <div className="absolute -top-2 -left-2 w-4 h-4 bg-indigo-500 border-2 border-white rounded-full z-50 shadow-sm" />
@@ -1517,7 +1613,6 @@ const DraggableElement = ({
         </>
       )}
 
-      {/* Text Element */}
       {element.type === "text" && (
         <div
           className="whitespace-nowrap px-2 py-1"
@@ -1533,17 +1628,27 @@ const DraggableElement = ({
         </div>
       )}
 
-      {/* Image Element */}
+      {(element.type === "box" || element.type === "circle") && (
+        <div
+          style={{
+            width: element.width,
+            height: element.height,
+            backgroundColor: element.color,
+            borderRadius:
+              element.type === "circle" ? "50%" : `${element.borderRadius}px`,
+          }}
+        />
+      )}
+
       {element.type === "image" && (
         <img
           src={element.content}
-          alt="User Asset"
+          alt=""
           className="pointer-events-none rounded-lg object-cover"
           style={{ width: element.width, height: element.height }}
         />
       )}
 
-      {/* QR Element */}
       {element.type === "qr" && (
         <div
           style={{ width: element.width, height: element.height }}
@@ -1558,21 +1663,7 @@ const DraggableElement = ({
   );
 };
 
-interface ToolBtnProps {
-  icon: React.ElementType;
-  onClick: () => void;
-  text?: string;
-  active?: boolean;
-  disabled?: boolean;
-}
-
-const ToolBtn = ({
-  icon: Icon,
-  onClick,
-  text,
-  active,
-  disabled,
-}: ToolBtnProps) => (
+const ToolBtn = ({ icon: Icon, onClick, text, active, disabled }: any) => (
   <button
     onClick={onClick}
     disabled={disabled}
@@ -1586,13 +1677,7 @@ const ToolBtn = ({
   </button>
 );
 
-const Tooltip = ({
-  children,
-  text,
-}: {
-  children: React.ReactNode;
-  text: string;
-}) => (
+const Tooltip = ({ children, text }: any) => (
   <div className="group relative flex items-center">
     {children}
     <div className="absolute left-14 bg-slate-800 text-white text-[10px] uppercase font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 border border-slate-700">
@@ -1604,9 +1689,8 @@ const Tooltip = ({
 
 const getBackgroundStyle = (bg: BackgroundSettings) => {
   if (bg.type === "solid") return bg.color1;
-
   if (bg.type === "gradient") {
-    const dirMap: Record<string, string> = {
+    const dirMap: any = {
       br: "to bottom right",
       r: "to right",
       b: "to bottom",
@@ -1615,14 +1699,10 @@ const getBackgroundStyle = (bg: BackgroundSettings) => {
       bg.color2
     })`;
   }
-
   if (bg.type === "mesh") {
-    return `
-      radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-      radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-      radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)
-    `;
+    return `radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%)`;
   }
-
   return "#000";
 };
+const getQRCodePath = () =>
+  "M4 4h6v6H4V4zm2 2v2h2V6H6zm-2 8h6v6H4v-6zm2 2v2h2v-2H6zm8-10h6v6h-6V4zm2 2v2h2V6h-2zM4 20h2v-2H4v2zm2-2h2v-2H6v2zm4 2h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm2-2h2v-2h-2v2zm-2 2h2v-2h-2v2zm10 8h2v-2h-2v2zm2-2h2v-2h-2v2zm-2-4h2v-2h-2v2zm-4 6h2v-2h-2v2zm2 2h2v-2h-2v2z";

@@ -76,25 +76,27 @@ interface CardState {
 interface Template {
   id: string;
   name: string;
+  category: string;
   thumbnail: string; // CSS color string for preview
   state: Partial<CardState>; // Partial state to merge
 }
 
 const FONTS = [
   { name: "Inter", value: "Inter, sans-serif" },
-  { name: "Playfair", value: '"Playfair Display", serif' },
+  { name: "Playfair Display", value: '"Playfair Display", serif' },
   { name: "Roboto Mono", value: '"Roboto Mono", monospace' },
   { name: "Oswald", value: '"Oswald", sans-serif' },
 ];
 
 const generateId = () => `el-${Math.random().toString(36).substr(2, 9)}`;
 
-// --- TEMPLATES CONFIGURATION ---
+// --- READY-MADE TEMPLATES LIBRARY ---
 
 const TEMPLATES: Template[] = [
   {
-    id: "modern-dark",
-    name: "Dev Dark",
+    id: "tech-lead",
+    name: "Tech Lead",
+    category: "Professional",
     thumbnail: "linear-gradient(to bottom right, #0f172a, #334155)",
     state: {
       background: {
@@ -108,11 +110,11 @@ const TEMPLATES: Template[] = [
       },
       elements: [
         {
-          id: "t1-1",
+          id: "tl-1",
           type: "text",
           content: "DIKIE DEV",
           x: 40,
-          y: 40,
+          y: 50,
           fontSize: 32,
           fontWeight: 800,
           color: "#ffffff",
@@ -123,12 +125,12 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t1-2",
+          id: "tl-2",
           type: "text",
-          content: "Full Stack Engineer",
+          content: "Senior Software Engineer",
           x: 40,
-          y: 85,
-          fontSize: 16,
+          y: 95,
+          fontSize: 14,
           fontWeight: 500,
           color: "#94a3b8",
           fontFamily: "Inter, sans-serif",
@@ -138,11 +140,11 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t1-3",
+          id: "tl-3",
           type: "text",
           content: "dikie@example.com",
           x: 40,
-          y: 240,
+          y: 230,
           fontSize: 14,
           fontWeight: 400,
           color: "#ffffff",
@@ -153,11 +155,26 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t1-4",
+          id: "tl-4",
+          type: "text",
+          content: "+1 (555) 000-0000",
+          x: 40,
+          y: 255,
+          fontSize: 14,
+          fontWeight: 400,
+          color: "#94a3b8",
+          fontFamily: "Inter, sans-serif",
+          opacity: 0.8,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "tl-5",
           type: "qr",
           content: "https://dikie.dev",
           x: 450,
-          y: 40,
+          y: 50,
           width: 100,
           height: 100,
           fontSize: 0,
@@ -173,13 +190,14 @@ const TEMPLATES: Template[] = [
     },
   },
   {
-    id: "minimal-light",
-    name: "Studio Clean",
-    thumbnail: "#f8fafc",
+    id: "swiss-minimal",
+    name: "Swiss Studio",
+    category: "Minimalist",
+    thumbnail: "#f1f5f9",
     state: {
       background: {
         type: "solid",
-        color1: "#f8fafc",
+        color1: "#f1f5f9",
         color2: "#ffffff",
         color3: "",
         direction: "br",
@@ -188,41 +206,56 @@ const TEMPLATES: Template[] = [
       },
       elements: [
         {
-          id: "t2-1",
+          id: "sm-1",
           type: "text",
-          content: "Alex Morgan",
-          x: 300,
-          y: 140,
-          fontSize: 42,
+          content: "M.",
+          x: 40,
+          y: 30,
+          fontSize: 120,
           fontWeight: 900,
           color: "#0f172a",
-          fontFamily: '"Playfair Display", serif',
+          fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: -2,
+          letterSpacing: -8,
+          rotation: 0,
+          zIndex: 1,
+        },
+        {
+          id: "sm-2",
+          type: "text",
+          content: "Morgan Creative",
+          x: 300,
+          y: 60,
+          fontSize: 24,
+          fontWeight: 700,
+          color: "#0f172a",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -1,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "t2-2",
+          id: "sm-3",
           type: "text",
-          content: "ART DIRECTOR",
+          content: "Art Direction & Design",
           x: 300,
-          y: 190,
+          y: 95,
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 500,
           color: "#64748b",
           fontFamily: "Inter, sans-serif",
           opacity: 1,
-          letterSpacing: 4,
+          letterSpacing: 2,
           rotation: 0,
           zIndex: 10,
         },
         {
-          id: "t2-3",
+          id: "sm-4",
           type: "qr",
           content: "portfolio",
-          x: 250,
-          y: 20,
+          x: 480,
+          y: 230,
           width: 80,
           height: 80,
           fontSize: 0,
@@ -234,12 +267,28 @@ const TEMPLATES: Template[] = [
           rotation: 0,
           zIndex: 5,
         },
+        {
+          id: "sm-5",
+          type: "text",
+          content: "EST. 2024",
+          x: 40,
+          y: 280,
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#94a3b8",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 4,
+          rotation: 0,
+          zIndex: 10,
+        },
       ],
     },
   },
   {
-    id: "cyber-punk",
-    name: "Cyber Neon",
+    id: "cyber-neon",
+    name: "Cyberpunk",
+    category: "Creative",
     thumbnail: "linear-gradient(to right, #2e0228, #180326)",
     state: {
       background: {
@@ -253,12 +302,12 @@ const TEMPLATES: Template[] = [
       },
       elements: [
         {
-          id: "t3-1",
+          id: "cn-1",
           type: "text",
-          content: "CYBER_SYSTEMS",
+          content: "NEO_SYSTEMS",
           x: 30,
           y: 120,
-          fontSize: 38,
+          fontSize: 42,
           fontWeight: 700,
           color: "#d946ef",
           fontFamily: '"Oswald", sans-serif',
@@ -268,11 +317,11 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t3-2",
+          id: "cn-2",
           type: "text",
           content: "SYSTEM_ADMIN // ROOT",
           x: 30,
-          y: 170,
+          y: 175,
           fontSize: 14,
           fontWeight: 400,
           color: "#22d3ee",
@@ -283,7 +332,7 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t3-3",
+          id: "cn-3",
           type: "text",
           content: "ID: 994-22-X",
           x: 450,
@@ -297,12 +346,122 @@ const TEMPLATES: Template[] = [
           rotation: 0,
           zIndex: 10,
         },
+        {
+          id: "cn-4",
+          type: "text",
+          content: "ACCESS GRANTED",
+          x: 430,
+          y: 40,
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#22d3ee",
+          fontFamily: '"Roboto Mono", monospace',
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
       ],
     },
   },
   {
-    id: "mesh-gradient",
+    id: "elegant-serif",
+    name: "Executive Gold",
+    category: "Luxury",
+    thumbnail: "#1a1a1a",
+    state: {
+      background: {
+        type: "solid",
+        color1: "#0a0a0a",
+        color2: "#000000",
+        color3: "",
+        direction: "br",
+        noise: 0.05,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "es-1",
+          type: "text",
+          content: "Alexander",
+          x: 260,
+          y: 100,
+          fontSize: 48,
+          fontWeight: 400,
+          color: "#fbbf24",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "es-2",
+          type: "text",
+          content: "Hamilton",
+          x: 300,
+          y: 150,
+          fontSize: 48,
+          fontWeight: 400,
+          color: "#fbbf24",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "es-3",
+          type: "text",
+          content: "CEO & Founder",
+          x: 40,
+          y: 280,
+          fontSize: 12,
+          fontWeight: 400,
+          color: "#a3a3a3",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 2,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "es-4",
+          type: "text",
+          content: "Hamilton Corp.",
+          x: 450,
+          y: 280,
+          fontSize: 12,
+          fontWeight: 700,
+          color: "#fbbf24",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "es-5",
+          type: "text",
+          content: "H",
+          x: 40,
+          y: 30,
+          fontSize: 80,
+          fontWeight: 400,
+          color: "#262626",
+          fontFamily: '"Playfair Display", serif',
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 1,
+        },
+      ],
+    },
+  },
+  {
+    id: "gradient-blur",
     name: "Aura Mesh",
+    category: "Creative",
     thumbnail:
       "radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%)",
     state: {
@@ -317,7 +476,7 @@ const TEMPLATES: Template[] = [
       },
       elements: [
         {
-          id: "t4-1",
+          id: "gb-1",
           type: "text",
           content: "creative",
           x: 40,
@@ -332,11 +491,11 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t4-2",
+          id: "gb-2",
           type: "text",
           content: "Studio",
           x: 40,
-          y: 200,
+          y: 180,
           fontSize: 64,
           fontWeight: 300,
           color: "#ffffff",
@@ -347,17 +506,113 @@ const TEMPLATES: Template[] = [
           zIndex: 10,
         },
         {
-          id: "t4-3",
+          id: "gb-3",
           type: "text",
           content: "Design",
           x: 40,
-          y: 260,
+          y: 240,
           fontSize: 64,
           fontWeight: 300,
-          color: "#ffffff",
+          color: "#e879f9",
           fontFamily: '"Playfair Display", serif',
           opacity: 1,
           letterSpacing: -3,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "gb-4",
+          type: "text",
+          content: "Tokyo • NY • London",
+          x: 420,
+          y: 40,
+          fontSize: 10,
+          fontWeight: 600,
+          color: "#ffffff",
+          fontFamily: "Inter, sans-serif",
+          opacity: 0.6,
+          letterSpacing: 1,
+          rotation: 0,
+          zIndex: 10,
+        },
+      ],
+    },
+  },
+  {
+    id: "corporate-blue",
+    name: "Trust Blue",
+    category: "Professional",
+    thumbnail: "#eff6ff",
+    state: {
+      background: {
+        type: "solid",
+        color1: "#eff6ff",
+        color2: "#ffffff",
+        color3: "",
+        direction: "br",
+        noise: 0,
+        blur: 0,
+      },
+      elements: [
+        {
+          id: "cb-1",
+          type: "text",
+          content: "John Doe",
+          x: 220,
+          y: 120,
+          fontSize: 28,
+          fontWeight: 700,
+          color: "#1e3a8a",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: -1,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cb-2",
+          type: "text",
+          content: "Cloud Architect",
+          x: 220,
+          y: 160,
+          fontSize: 14,
+          fontWeight: 500,
+          color: "#3b82f6",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cb-3",
+          type: "qr",
+          content: "contact",
+          x: 60,
+          y: 100,
+          width: 120,
+          height: 120,
+          fontSize: 0,
+          fontWeight: 0,
+          color: "",
+          fontFamily: "",
+          opacity: 1,
+          letterSpacing: 0,
+          rotation: 0,
+          zIndex: 10,
+        },
+        {
+          id: "cb-4",
+          type: "text",
+          content: "Solutions Inc.",
+          x: 450,
+          y: 300,
+          fontSize: 14,
+          fontWeight: 700,
+          color: "#93c5fd",
+          fontFamily: "Inter, sans-serif",
+          opacity: 1,
+          letterSpacing: 1,
           rotation: 0,
           zIndex: 10,
         },
@@ -374,7 +629,7 @@ const INITIAL_STATE: CardState = {
   showGrid: true,
   history: [],
   historyIndex: -1,
-  selectedId: "t1-1",
+  selectedId: "tl-1",
 };
 
 // ==========================================
@@ -529,7 +784,9 @@ const Button = ({
 export default function CardArchitectPro() {
   // --- State ---
   const [state, setState] = useState<CardState>(INITIAL_STATE);
-  const [activeTab, setActiveTab] = useState<"tools" | "templates">("tools");
+  const [activeTab, setActiveTab] = useState<"tools" | "templates">(
+    "templates"
+  ); // Default to templates
   const cardRef = useRef<HTMLDivElement>(null);
 
   // --- History Management ---
@@ -640,8 +897,6 @@ export default function CardArchitectPro() {
     if (cardRef.current === null) return;
 
     // Temporarily hide grid/selection handles via CSS class or logic if needed
-    // The grid is handled by conditional rendering, so we just toggle state quickly?
-    // Actually, toPng captures what is visible. We can rely on the user turning off grid or force it.
     const prevGrid = state.showGrid;
     const prevSelected = state.selectedId;
 
@@ -719,18 +974,18 @@ export default function CardArchitectPro() {
 
         {/* Navigation Tabs */}
         <div className="flex flex-col gap-2 w-full px-2">
-          <Tooltip text="Editor Tools">
-            <ToolBtn
-              icon={Grid}
-              active={activeTab === "tools"}
-              onClick={() => setActiveTab("tools")}
-            />
-          </Tooltip>
           <Tooltip text="Templates">
             <ToolBtn
               icon={Layout}
               active={activeTab === "templates"}
               onClick={() => setActiveTab("templates")}
+            />
+          </Tooltip>
+          <Tooltip text="Editor Tools">
+            <ToolBtn
+              icon={Grid}
+              active={activeTab === "tools"}
+              onClick={() => setActiveTab("tools")}
             />
           </Tooltip>
         </div>
@@ -801,10 +1056,10 @@ export default function CardArchitectPro() {
 
       {/* --- SECONDARY SIDEBAR (TEMPLATES) --- */}
       {activeTab === "templates" && (
-        <div className="w-64 border-r border-white/10 bg-[#0c0c0e] flex flex-col z-10 animate-in slide-in-from-left-4 duration-200">
+        <div className="w-72 border-r border-white/10 bg-[#0c0c0e] flex flex-col z-10 animate-in slide-in-from-left-4 duration-200">
           <div className="p-4 border-b border-white/10">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Templates
+              Pick a Template
             </h2>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -812,16 +1067,21 @@ export default function CardArchitectPro() {
               <button
                 key={t.id}
                 onClick={() => applyTemplate(t)}
-                className="group w-full text-left"
+                className="group w-full text-left bg-slate-900/50 hover:bg-slate-800 rounded-xl p-3 border border-white/5 hover:border-indigo-500/50 transition-all"
               >
                 <div
-                  className="w-full aspect-video rounded-lg border border-white/10 mb-2 overflow-hidden relative shadow-sm transition-all group-hover:border-indigo-500 group-hover:shadow-indigo-500/20"
+                  className="w-full aspect-video rounded-lg border border-white/10 mb-3 overflow-hidden relative shadow-sm"
                   style={{ background: t.thumbnail }}
                 >
                   <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
                 </div>
-                <div className="text-xs font-medium text-slate-300 group-hover:text-white">
-                  {t.name}
+                <div className="flex justify-between items-center">
+                  <div className="text-sm font-semibold text-slate-200 group-hover:text-white">
+                    {t.name}
+                  </div>
+                  <div className="text-[10px] bg-white/10 px-2 py-0.5 rounded text-slate-400">
+                    {t.category}
+                  </div>
                 </div>
               </button>
             ))}
